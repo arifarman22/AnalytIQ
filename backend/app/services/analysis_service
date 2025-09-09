@@ -1,0 +1,64 @@
+import pandas as pd
+from typing import Dict, Any
+from ..eda import generate_eda, generate_default_plots
+
+class AnalysisError(Exception):
+    pass
+
+class AnalysisService:
+    def __init__(self):
+        pass
+    
+    async def analyze_dataset(self, df: pd.DataFrame, prompt: str) -> Dict[str, Any]:
+        """Analyze a dataset and generate insights"""
+        try:
+            # Generate EDA
+            eda = generate_eda(df)
+            
+            # Generate visualizations
+            plots = generate_default_plots(df)
+            
+            # Generate insights using LLM
+            insights = await self._generate_insights(df, prompt, eda)
+            
+            return {
+                "eda": eda,
+                "plots": plots,
+                "insights": insights
+            }
+            
+        except Exception as e:
+            raise AnalysisError(f"Analysis failed: {str(e)}")
+    
+    async def _generate_insights(self, df: pd.DataFrame, prompt: str, eda: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate insights using LLM (placeholder implementation)"""
+        try:
+            # Try to use OpenAI client if available
+            from ..llm.openai_client import generate_insights_from_prompt
+            return generate_insights_from_prompt(df, prompt, eda)
+        except ImportError:
+            # Fallback to simple insights if LLM not available
+            return self._generate_basic_insights(df, prompt, eda)
+        except Exception as e:
+            # Fallback if LLM fails
+            return self._generate_basic_insights(df, prompt, eda)
+    
+    def _generate_basic_insights(self, df: pd.DataFrame, prompt: str, eda: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate basic insights without LLM"""
+        numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
+        categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+        
+        return {
+            "summary": f"Dataset with {len(df)} rows and {len(df.columns)} columns analyzed.",
+            "prompt_response": f"Basic analysis for: {prompt}",
+            "dataset_stats": {
+                "numeric_columns": numeric_cols,
+                "categorical_columns": categorical_cols,
+                "missing_values_total": eda['missing_values']['total_missing']
+            },
+            "recommendations": [
+                "Consider filling missing values if applicable",
+                "Check for outliers in numeric columns",
+                "Encode categorical variables for machine learning"
+            ]
+        }
