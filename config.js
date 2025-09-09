@@ -6,7 +6,7 @@ const config = {
   development: 'http://localhost:8000',
   
   // Production API URL - Replace with your actual deployed backend URL
-  production: 'analytiq-production.up.railway.app',
+  production: 'https://analytiq-production.up.railway.app/',
   
   // Get current environment
   getApiUrl: () => {
