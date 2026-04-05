@@ -1,13 +1,26 @@
-fastapi>=0.100.0
+fastapi>=0.104.0
 uvicorn>=0.24.0
 pandas
 openpyxl
 python-multipart
 plotly
-openai
+openai>=1.0.0
 scipy
 scikit-learn
 python-dotenv
 pydantic>=2.0.0
 pydantic-settings
 numpy
+# Database - Neon PostgreSQL
+asyncpg
+sqlalchemy[asyncio]>=2.0.0
+alembic
+# Auth
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==4.0.1
+# Rate limiting
+slowapi
+# Production
+httpx
+python-dateutil

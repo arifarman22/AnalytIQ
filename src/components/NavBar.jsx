@@ -60,6 +60,7 @@ const NavBar = ({ user, onLogout }) => {
   const navItems = [
     { label: 'Home', path: '/', icon: <Home /> },
     { label: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+    ...(user ? [{ label: 'History', path: '/history', icon: <Analytics /> }] : []),
     { label: 'Pricing', path: '/pricing', icon: <AttachMoney /> },
     { label: 'Contact', path: '/contact', icon: <ContactPage /> },
   ];

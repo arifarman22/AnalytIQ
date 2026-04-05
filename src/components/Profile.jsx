@@ -39,9 +39,12 @@ import {
   VerifiedUser
 } from '@mui/icons-material';
 
-const Profile = ({ user }) => {
+const Profile = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Get user from localStorage (set by AuthContext)
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   if (!user) {
     return (

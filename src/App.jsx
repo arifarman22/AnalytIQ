@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import FileUploader from './components/FileUploader';
 import PromptBox from './components/PromptBox';
 import AnalysisResults from './components/AnalysisResults';
@@ -13,10 +14,9 @@ import NavBar from './components/NavBar';
 import Home from './components/Home';
 import Pricing from './components/Pricing';
 import Contact from './components/Contact';
+import AnalysisHistory from './components/AnalysisHistory';
 import './styles.css';
-import axios from 'axios';
-
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import api from './utils/api';
 
 const darkTheme = createTheme({
   palette: {
@@ -38,7 +38,13 @@ const darkTheme = createTheme({
   },
 });
 
-function Dashboard({ user }) {
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return user ? children : <Navigate to="/login" />;
+}
+
+function Dashboard() {
   const [file, setFile] = useState(null);
   const [datasetId, setDatasetId] = useState(null);
   const [prompt, setPrompt] = useState('');
@@ -47,43 +53,32 @@ function Dashboard({ user }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleFileChange = (selectedFile) => {
-    setFile(selectedFile);
-    setError(null);
-  };
+  const handleFileChange = (selectedFile) => { setFile(selectedFile); setError(null); };
 
   const handleUpload = async () => {
     if (!file) { setError('Please select a file first'); return; }
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const response = await axios.post(`${API}/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setUploadResponse(response.data);
-      setDatasetId(response.data.dataset_id);
+      const res = await api.post('/datasets/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setUploadResponse(res.data);
+      setDatasetId(res.data.dataset_id);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to upload file');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const handleAnalyze = async () => {
     if (!datasetId) { setError('Please upload a dataset first'); return; }
     if (!prompt.trim()) { setError('Please enter an analysis prompt'); return; }
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
-      const response = await axios.post(`${API}/analyze`, { dataset_id: datasetId, prompt });
-      setAnalysisResult(response.data);
+      const res = await api.post('/analyses/', { dataset_id: datasetId, prompt });
+      setAnalysisResult(res.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to analyze dataset');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const resetAll = () => {
@@ -119,28 +114,37 @@ function Dashboard({ user }) {
   );
 }
 
-export default function App() {
-  const [user, setUser] = useState(null);
-  const handleLogin = (userData) => setUser(userData);
-  const handleLogout = () => setUser(null);
+function AppRoutes() {
+  const { user, logout } = useAuth();
 
+  return (
+    <>
+      <NavBar user={user} onLogout={logout} />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/history" element={<ProtectedRoute><AnalysisHistory /></ProtectedRoute>} />
+        <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
+        <Route path="/signup" element={user ? <Navigate to="/dashboard" /> : <Signup />} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </>
+  );
+}
+
+export default function App() {
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      <Router>
-        <NavBar user={user} onLogout={handleLogout} />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={user ? <Dashboard user={user} /> : <Navigate to="/login" />} />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/signup" element={<Signup onLogin={handleLogin} />} />
-          <Route path="/profile" element={user ? <Profile user={user} /> : <Navigate to="/login" />} />
-          <Route path="/settings" element={user ? <Settings user={user} /> : <Navigate to="/login" />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import {
   Card, CardContent, Typography, TextField, Button, Box,
-  InputAdornment, IconButton, Alert, Link, Container, Fade
+  InputAdornment, IconButton, Alert, Link, Container, Fade, Divider
 } from '@mui/material';
-import {
-  Visibility, VisibilityOff, Email, Lock, Person, ArrowForward
-} from '@mui/icons-material';
+import { Visibility, VisibilityOff, Email, Lock, Person, Business, ArrowForward } from '@mui/icons-material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-const Signup = ({ onLogin }) => {
+const Signup = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '', showPassword: false });
+  const { signup } = useAuth();
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '', company: '', showPassword: false });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState({ open: false, message: '', severity: 'error' });
@@ -37,11 +37,10 @@ const Signup = ({ onLogin }) => {
     if (!validateForm()) return;
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      onLogin({ email: formData.email, name: formData.name, avatar: null });
+      await signup(formData.name, formData.email, formData.password, formData.company);
       navigate('/dashboard', { replace: true });
-    } catch {
-      setAlert({ open: true, message: 'Signup failed. Please try again.', severity: 'error' });
+    } catch (err) {
+      setAlert({ open: true, message: err.response?.data?.detail || 'Signup failed', severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -54,19 +53,21 @@ const Signup = ({ onLogin }) => {
           <Typography variant="h3" sx={{ fontWeight: 800, background: 'linear-gradient(45deg, #7c4dff, #651fff)', backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
             AnalytIQ
           </Typography>
-          <Typography variant="body2" color="text.secondary">Create your account</Typography>
+          <Typography variant="body2" color="text.secondary">Start your data journey</Typography>
         </Box>
 
         <Fade in timeout={800}>
-          <Card sx={{ width: '100%', maxWidth: 450, mx: 'auto', border: '1px solid', borderColor: 'divider' }}>
+          <Card sx={{ width: '100%', maxWidth: 480, mx: 'auto', border: '1px solid', borderColor: 'divider' }}>
             <CardContent sx={{ p: 4 }}>
-              <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, textAlign: 'center', mb: 3 }}>Get Started</Typography>
+              <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, textAlign: 'center', mb: 3 }}>Create Account</Typography>
 
               <form onSubmit={handleSubmit}>
                 <TextField label="Full Name" fullWidth value={formData.name} onChange={handleChange('name')} error={!!errors.name} helperText={errors.name} sx={{ mb: 2 }}
                   InputProps={{ startAdornment: <InputAdornment position="start"><Person color="primary" /></InputAdornment> }} />
-                <TextField label="Email" fullWidth value={formData.email} onChange={handleChange('email')} error={!!errors.email} helperText={errors.email} sx={{ mb: 2 }}
+                <TextField label="Email" type="email" fullWidth value={formData.email} onChange={handleChange('email')} error={!!errors.email} helperText={errors.email} sx={{ mb: 2 }}
                   InputProps={{ startAdornment: <InputAdornment position="start"><Email color="primary" /></InputAdornment> }} />
+                <TextField label="Company (Optional)" fullWidth value={formData.company} onChange={handleChange('company')} sx={{ mb: 2 }}
+                  InputProps={{ startAdornment: <InputAdornment position="start"><Business color="primary" /></InputAdornment> }} />
                 <TextField label="Password" type={formData.showPassword ? 'text' : 'password'} fullWidth value={formData.password} onChange={handleChange('password')} error={!!errors.password} helperText={errors.password} sx={{ mb: 2 }}
                   InputProps={{
                     startAdornment: <InputAdornment position="start"><Lock color="primary" /></InputAdornment>,
@@ -81,11 +82,12 @@ const Signup = ({ onLogin }) => {
                 </Button>
               </form>
 
-              <Alert severity={alert.severity} sx={{ mt: 2, display: alert.open ? 'flex' : 'none' }} onClose={() => setAlert(p => ({ ...p, open: false }))}>
-                {alert.message}
-              </Alert>
+              <Alert severity={alert.severity} sx={{ mt: 2, display: alert.open ? 'flex' : 'none' }}
+                onClose={() => setAlert(p => ({ ...p, open: false }))}>{alert.message}</Alert>
 
-              <Box sx={{ mt: 3, textAlign: 'center' }}>
+              <Divider sx={{ my: 3 }} />
+
+              <Box textAlign="center">
                 <Typography variant="body2" color="text.secondary">
                   Already have an account?{' '}
                   <Link component={RouterLink} to="/login" color="primary" sx={{ textDecoration: 'none', fontWeight: 600 }}>Sign in</Link>
