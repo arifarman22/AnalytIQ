@@ -12,9 +12,13 @@ import warnings
 warnings.filterwarnings('ignore')
 
 def df_to_base64_png(fig):
-    """Convert plotly figure to base64 encoded PNG"""
-    img_bytes = fig.to_image(format='png', width=1000, height=600, scale=2)
-    return base64.b64encode(img_bytes).decode('utf-8')
+    """Convert plotly figure to base64 encoded HTML"""
+    try:
+        img_bytes = fig.to_image(format='png', width=1000, height=600, scale=2)
+        return base64.b64encode(img_bytes).decode('utf-8')
+    except Exception:
+        html_str = fig.to_html(include_plotlyjs='cdn', full_html=False)
+        return base64.b64encode(html_str.encode('utf-8')).decode('utf-8')
 
 def convert_np(obj):
     if isinstance(obj, (np.integer, np.int64, np.int32)):

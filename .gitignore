@@ -1,3 +1,8 @@
+# Node
+node_modules/
+.vite/
+dist/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -136,8 +141,11 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
+!.env.example
 .envrc
 .venv
+nginx/.env
 env/
 venv/
 ENV/

@@ -21,7 +21,7 @@ const PromptBox = ({ prompt, onPromptChange, onAnalyze, loading, columns, datase
       <h2>Analyze Your Data</h2>
       
       {datasetId && (
-        <div style={{ marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#f0f9ff', borderRadius: '4px' }}>
+        <div style={{ marginBottom: '1rem', padding: '0.5rem', backgroundColor: 'rgba(124, 77, 255, 0.1)', borderRadius: '4px' }}>
           <p><strong>Dataset ID:</strong> {datasetId}</p>
         </div>
       )}
@@ -60,9 +60,10 @@ const PromptBox = ({ prompt, onPromptChange, onAnalyze, loading, columns, datase
               onClick={() => handlePromptSelect(example)}
               style={{
                 padding: '0.5rem',
-                border: '1px solid #e2e8f0',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '4px',
-                backgroundColor: '#f7fafc',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                color: 'inherit',
                 cursor: 'pointer',
                 fontSize: '0.875rem'
               }}

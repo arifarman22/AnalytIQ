@@ -1,4 +1,3 @@
-// App main file
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -7,7 +6,9 @@ import FileUploader from './components/FileUploader';
 import PromptBox from './components/PromptBox';
 import AnalysisResults from './components/AnalysisResults';
 import Login from './components/Login';
+import Signup from './components/Signup';
 import Profile from './components/Profile';
+import Settings from './components/Settings';
 import NavBar from './components/NavBar';
 import Home from './components/Home';
 import Pricing from './components/Pricing';
@@ -17,53 +18,23 @@ import axios from 'axios';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-// Create dark theme
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
-    primary: {
-      main: '#7c4dff',
-    },
-    secondary: {
-      main: '#651fff',
-    },
-    background: {
-      default: '#121212',
-      paper: '#1e1e1e',
-    },
-    text: {
-      primary: '#e0e0e0',
-      secondary: '#a0a0a0',
-    },
+    primary: { main: '#7c4dff' },
+    secondary: { main: '#651fff' },
+    background: { default: '#121212', paper: '#1e1e1e' },
+    text: { primary: '#e0e0e0', secondary: '#a0a0a0' },
     divider: '#424242',
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h4: {
-      fontWeight: 700,
-    },
-    h6: {
-      fontWeight: 600,
-    },
+    h4: { fontWeight: 700 },
+    h6: { fontWeight: 600 },
   },
   components: {
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
-        },
-      },
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          textTransform: 'none',
-          fontWeight: 600,
-        },
-      },
-    },
+    MuiCard: { styleOverrides: { root: { borderRadius: 12, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)' } } },
+    MuiButton: { styleOverrides: { root: { borderRadius: 8, textTransform: 'none', fontWeight: 600 } } },
   },
 });
 
@@ -82,10 +53,7 @@ function Dashboard({ user }) {
   };
 
   const handleUpload = async () => {
-    if (!file) {
-      setError('Please select a file first');
-      return;
-    }
+    if (!file) { setError('Please select a file first'); return; }
     setLoading(true);
     setError(null);
     const formData = new FormData();
@@ -96,7 +64,6 @@ function Dashboard({ user }) {
       });
       setUploadResponse(response.data);
       setDatasetId(response.data.dataset_id);
-      setError(null);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to upload file');
     } finally {
@@ -105,23 +72,13 @@ function Dashboard({ user }) {
   };
 
   const handleAnalyze = async () => {
-    if (!datasetId) {
-      setError('Please upload a dataset first');
-      return;
-    }
-    if (!prompt.trim()) {
-      setError('Please enter an analysis prompt');
-      return;
-    }
+    if (!datasetId) { setError('Please upload a dataset first'); return; }
+    if (!prompt.trim()) { setError('Please enter an analysis prompt'); return; }
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post(`${API}/analyze`, {
-        dataset_id: datasetId,
-        prompt: prompt,
-      });
+      const response = await axios.post(`${API}/analyze`, { dataset_id: datasetId, prompt });
       setAnalysisResult(response.data);
-      setError(null);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to analyze dataset');
     } finally {
@@ -130,12 +87,8 @@ function Dashboard({ user }) {
   };
 
   const resetAll = () => {
-    setFile(null);
-    setDatasetId(null);
-    setPrompt('');
-    setAnalysisResult(null);
-    setUploadResponse(null);
-    setError(null);
+    setFile(null); setDatasetId(null); setPrompt('');
+    setAnalysisResult(null); setUploadResponse(null); setError(null);
   };
 
   return (
@@ -148,37 +101,17 @@ function Dashboard({ user }) {
           </div>
         )}
         {!datasetId ? (
-          <FileUploader
-            file={file}
-            onFileChange={handleFileChange}
-            onUpload={handleUpload}
-            loading={loading}
-            uploadResponse={uploadResponse}
-          />
+          <FileUploader file={file} onFileChange={handleFileChange} onUpload={handleUpload} loading={loading} uploadResponse={uploadResponse} />
         ) : (
           <>
             <div className="upload-success">
               <h3>✓ Dataset Uploaded Successfully</h3>
               <p>Filename: {uploadResponse.filename}</p>
               <p>Dimensions: {uploadResponse.rows} rows × {uploadResponse.cols} columns</p>
-              <button onClick={resetAll} className="reset-btn">
-                Upload Different File
-              </button>
+              <button onClick={resetAll} className="reset-btn">Upload Different File</button>
             </div>
-            <PromptBox
-              prompt={prompt}
-              onPromptChange={setPrompt}
-              onAnalyze={handleAnalyze}
-              loading={loading}
-              columns={uploadResponse?.columns || []}
-              datasetId={datasetId}
-            />
-            {analysisResult && (
-              <AnalysisResults
-                analysisResult={analysisResult}
-                datasetId={datasetId}
-              />
-            )}
+            <PromptBox prompt={prompt} onPromptChange={setPrompt} onAnalyze={handleAnalyze} loading={loading} columns={uploadResponse?.columns || []} datasetId={datasetId} />
+            {analysisResult && <AnalysisResults analysisResult={analysisResult} datasetId={datasetId} />}
           </>
         )}
       </main>
@@ -188,13 +121,8 @@ function Dashboard({ user }) {
 
 export default function App() {
   const [user, setUser] = useState(null);
-
-  const handleLogin = (userData) => {
-    setUser(userData);
-  };
-  const handleLogout = () => {
-    setUser(null);
-  };
+  const handleLogin = (userData) => setUser(userData);
+  const handleLogout = () => setUser(null);
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -205,10 +133,12 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={user ? <Dashboard user={user} /> : <Navigate to="/login" />} />
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/profile" element={<Profile user={user} />} />
+          <Route path="/signup" element={<Signup onLogin={handleLogin} />} />
+          <Route path="/profile" element={user ? <Profile user={user} /> : <Navigate to="/login" />} />
+          <Route path="/settings" element={user ? <Settings user={user} /> : <Navigate to="/login" />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="*" element={<Home />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
     </ThemeProvider>
