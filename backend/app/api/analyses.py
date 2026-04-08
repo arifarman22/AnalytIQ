@@ -1,5 +1,4 @@
 import io
-import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -9,7 +8,6 @@ from app.core.config import settings
 from app.models.user import User
 from app.models.dataset import Dataset, Analysis
 from app.schemas import AnalyzeRequest, AnalysisResponse, AnalysisListItem
-from app.eda import generate_eda, generate_default_plots
 from typing import List
 
 router = APIRouter(prefix="/analyses", tags=["Analyses"])
@@ -21,6 +19,9 @@ async def run_analysis(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    import pandas as pd
+    from app.eda import generate_eda, generate_default_plots
+
     result = await db.execute(select(Dataset).where(Dataset.id == req.dataset_id, Dataset.owner_id == user.id))
     dataset = result.scalar_one_or_none()
     if not dataset:

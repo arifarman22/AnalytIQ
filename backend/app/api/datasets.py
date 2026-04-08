@@ -1,5 +1,4 @@
 import io
-import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -21,6 +20,8 @@ async def upload_dataset(
     db: AsyncSession = Depends(get_db)
 ):
     import os
+    import pandas as pd
+
     file_ext = os.path.splitext(file.filename)[1].lower()
     if file_ext not in settings.SUPPORTED_FILE_TYPES:
         raise HTTPException(status_code=400, detail=f"Unsupported file type. Supported: {', '.join(settings.SUPPORTED_FILE_TYPES)}")
@@ -69,12 +70,11 @@ async def list_datasets(user: User = Depends(get_current_user), db: AsyncSession
     result = await db.execute(
         select(Dataset).where(Dataset.owner_id == user.id).order_by(Dataset.created_at.desc()).limit(50)
     )
-    datasets = result.scalars().all()
     return [
         DatasetResponse(
             id=str(d.id), filename=d.filename, rows=d.rows, cols=d.cols,
             columns=d.columns, file_size_bytes=d.file_size_bytes, created_at=d.created_at
-        ) for d in datasets
+        ) for d in result.scalars().all()
     ]
 
 

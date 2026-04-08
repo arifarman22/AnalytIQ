@@ -14,12 +14,12 @@ passlib[bcrypt]
 bcrypt==4.0.1
 # Rate limiting
 slowapi
-# Analytics
+# Analytics (kept minimal for serverless)
 pandas
 openpyxl
 numpy<2
-scipy
 plotly
+scipy
 # AI
 openai>=1.0.0
 # Utils
