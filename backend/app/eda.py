@@ -12,13 +12,17 @@ import warnings
 warnings.filterwarnings('ignore')
 
 def df_to_base64_png(fig):
-    """Convert plotly figure to base64 encoded HTML"""
+    """Convert plotly figure to base64 encoded PNG, fallback to HTML"""
     try:
         img_bytes = fig.to_image(format='png', width=1000, height=600, scale=2)
-        return base64.b64encode(img_bytes).decode('utf-8')
+        return {'b64': base64.b64encode(img_bytes).decode('utf-8'), 'mime': 'image/png'}
     except Exception:
-        html_str = fig.to_html(include_plotlyjs='cdn', full_html=False)
-        return base64.b64encode(html_str.encode('utf-8')).decode('utf-8')
+        html_str = fig.to_html(include_plotlyjs='cdn', full_html=True)
+        return {'b64': base64.b64encode(html_str.encode('utf-8')).decode('utf-8'), 'mime': 'text/html'}
+
+def make_plot(name, fig):
+    result = df_to_base64_png(fig)
+    return {'name': name, 'mime': result['mime'], 'b64': result['b64']}
 
 def convert_np(obj):
     if isinstance(obj, (np.integer, np.int64, np.int32)):
@@ -215,7 +219,7 @@ def generate_default_plots(df: pd.DataFrame, max_plots=10):
             zmin=-1, 
             zmax=1
         )
-        plots.append({'name': 'correlation_matrix', 'mime': 'image/png', 'b64': df_to_base64_png(fig)})
+        plots.append(make_plot('correlation_matrix', fig))
     
     # 2) Missing values visualization
     missing_data = df.isnull().sum()
@@ -234,7 +238,7 @@ def generate_default_plots(df: pd.DataFrame, max_plots=10):
             labels={'column': 'Column', 'missing_percentage': 'Missing Values (%)'}
         )
         fig.update_layout(xaxis_tickangle=-45)
-        plots.append({'name': 'missing_values', 'mime': 'image/png', 'b64': df_to_base64_png(fig)})
+        plots.append(make_plot('missing_values', fig))
     
     # 3) Distribution of numeric features with Q-Q plots
     if len(numeric_cols) > 0:
@@ -263,7 +267,7 @@ def generate_default_plots(df: pd.DataFrame, max_plots=10):
             height=300 * n_rows,
             showlegend=False
         )
-        plots.append({'name': 'numeric_distributions', 'mime': 'image/png', 'b64': df_to_base64_png(fig)})
+        plots.append(make_plot('numeric_distributions', fig))
         
         # Q-Q plots for normality check
         if len(numeric_cols) > 0:
@@ -305,7 +309,7 @@ def generate_default_plots(df: pd.DataFrame, max_plots=10):
                 height=400 * n_rows,
                 showlegend=False
             )
-            plots.append({'name': 'qq_plots', 'mime': 'image/png', 'b64': df_to_base64_png(fig)})
+            plots.append(make_plot('qq_plots', fig))
     
     # 4) Box plots for outlier detection
     if len(numeric_cols) > 0:
@@ -334,7 +338,7 @@ def generate_default_plots(df: pd.DataFrame, max_plots=10):
             height=300 * n_rows,
             showlegend=False
         )
-        plots.append({'name': 'outlier_detection', 'mime': 'image/png', 'b64': df_to_base64_png(fig)})
+        plots.append(make_plot('outlier_detection', fig))
     
     # 5) Categorical features analysis
     categorical_cols = df.select_dtypes(include=['object', 'category']).columns
@@ -349,7 +353,7 @@ def generate_default_plots(df: pd.DataFrame, max_plots=10):
                 labels={'x': col, 'y': 'Count'}
             )
             fig.update_layout(xaxis_tickangle=-45)
-            plots.append({'name': f'categorical_{col}', 'mime': 'image/png', 'b64': df_to_base64_png(fig)})
+            plots.append(make_plot(f'categorical_{col}', fig))
             
             # Pie chart for top categories if not too many
             if df[col].nunique() <= 10:
@@ -358,7 +362,7 @@ def generate_default_plots(df: pd.DataFrame, max_plots=10):
                     names=value_counts.index.astype(str),
                     title=f'Distribution: {col}'
                 )
-                plots.append({'name': f'pie_{col}', 'mime': 'image/png', 'b64': df_to_base64_png(fig)})
+                plots.append(make_plot(f'pie_{col}', fig))
     
     # 6) Relationship between categorical and numeric variables
     if len(categorical_cols) > 0 and len(numeric_cols) > 0:
@@ -372,7 +376,7 @@ def generate_default_plots(df: pd.DataFrame, max_plots=10):
                         y=num_col,
                         title=f'{num_col} by {cat_col}'
                     )
-                    plots.append({'name': f'box_{num_col}_by_{cat_col}', 'mime': 'image/png', 'b64': df_to_base64_png(fig)})
+                    plots.append(make_plot(f'box_{num_col}_by_{cat_col}', fig))
     
     # 7) Pairplot for top numeric features (if not too many)
     if len(numeric_cols) >= 2 and len(numeric_cols) <= 5:
@@ -381,7 +385,7 @@ def generate_default_plots(df: pd.DataFrame, max_plots=10):
             title="Pairwise Relationships Between Numeric Features",
             height=800
         )
-        plots.append({'name': 'pairplot', 'mime': 'image/png', 'b64': df_to_base64_png(fig)})
+        plots.append(make_plot('pairplot', fig))
     elif len(numeric_cols) > 5:
         # Select top 5 numeric features by variance
         numeric_variance = df[numeric_cols].var().sort_values(ascending=False)
@@ -392,7 +396,7 @@ def generate_default_plots(df: pd.DataFrame, max_plots=10):
             title="Pairwise Relationships Between Top 5 Numeric Features (by Variance)",
             height=800
         )
-        plots.append({'name': 'pairplot_top5', 'mime': 'image/png', 'b64': df_to_base64_png(fig)})
+        plots.append(make_plot('pairplot_top5', fig))
     
     # 8) Time series plots if datetime columns exist
     datetime_cols = df.select_dtypes(include=['datetime64']).columns
@@ -407,7 +411,7 @@ def generate_default_plots(df: pd.DataFrame, max_plots=10):
                         y=num_col,
                         title=f'{num_col} over Time'
                     )
-                    plots.append({'name': f'timeseries_{num_col}', 'mime': 'image/png', 'b64': df_to_base64_png(fig)})
+                    plots.append(make_plot(f'timeseries_{num_col}', fig))
                     
                     # Add rolling average
                     rolling_df = time_df.set_index(dt_col)[num_col].rolling(window=30).mean().reset_index()
@@ -418,6 +422,6 @@ def generate_default_plots(df: pd.DataFrame, max_plots=10):
                         name='30-day Rolling Avg',
                         line=dict(color='red', dash='dash')
                     ))
-                    plots.append({'name': f'timeseries_rolling_{num_col}', 'mime': 'image/png', 'b64': df_to_base64_png(fig)})
+                    plots.append(make_plot(f'timeseries_rolling_{num_col}', fig))
     
     return plots[:max_plots]

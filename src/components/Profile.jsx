@@ -1,380 +1,73 @@
 import React, { useState } from 'react';
-import {
-  Card,
-  CardContent,
-  Typography,
-  Avatar,
-  Box,
-  Grid,
-  Chip,
-  Divider,
-  Tabs,
-  Tab,
-  Button,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  IconButton,
-  LinearProgress,
-  Paper,
-  Container
-} from '@mui/material';
-import {
-  Edit,
-  Security,
-  Analytics,
-  Storage,
-  History,
-  Notifications,
-  Payment,
-  Download,
-  CloudUpload,
-  Person,
-  Email,
-  CalendarToday,
-  Business,
-  Phone,
-  LocationOn,
-  VerifiedUser
-} from '@mui/icons-material';
+import { Card, CardContent, Typography, Avatar, Box, Grid, Chip, Tabs, Tab, Button, List, ListItem, ListItemIcon, ListItemText, LinearProgress, Paper, Container } from '@mui/material';
+import { Edit, Security, Analytics, Storage, History, Notifications, Payment, Download, CloudUpload, Person, Email, CalendarToday, Business, VerifiedUser } from '@mui/icons-material';
 
 const Profile = () => {
-  const [activeTab, setActiveTab] = useState(0);
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Get user from localStorage (set by AuthContext)
+  const [tab, setTab] = useState(0);
+  const [editing, setEditing] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (!user) return <Container maxWidth="md"><Box textAlign="center" mt={8}><Typography variant="h5" sx={{ color: '#64748b' }}>Please log in to view your profile</Typography></Box></Container>;
 
-  if (!user) {
-    return (
-      <Container maxWidth="md">
-        <Box textAlign="center" mt={8}>
-          <Typography variant="h4" color="text.secondary">
-            Please log in to view your profile
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-
-  // Sample user data - in real app, this would come from backend
-  const userData = {
-    name: user.name || 'Alex Johnson',
-    email: user.email,
-    role: 'Data Analyst',
-    company: 'TechCorp Inc.',
-    phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
-    joinDate: 'January 15, 2024',
-    lastLogin: '2 hours ago',
-    plan: 'Enterprise',
-    status: 'Active',
-    storage: {
-      used: 2.5,
-      total: 10,
-      percentage: 25
-    },
-    stats: {
-      analyses: 147,
-      datasets: 23,
-      visualizations: 89
-    }
-  };
-
-  const TabPanel = ({ children, value, index, ...other }) => (
-    <div hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
-    </div>
-  );
-
-  const tabs = [
-    { label: 'Overview', icon: <Person /> },
-    { label: 'Activity', icon: <History /> },
-    { label: 'Settings', icon: <Security /> },
-    { label: 'Billing', icon: <Payment /> }
-  ];
-
-  const recentActivity = [
-    { action: 'Uploaded dataset', time: '2 hours ago', type: 'upload' },
-    { action: 'Completed analysis', time: '5 hours ago', type: 'analysis' },
-    { action: 'Created dashboard', time: '1 day ago', type: 'dashboard' },
-    { action: 'Shared report', time: '2 days ago', type: 'share' }
-  ];
+  const u = { name: user.name || 'User', email: user.email, role: 'Data Analyst', company: 'TechCorp Inc.', joinDate: 'Jan 15, 2024', plan: 'Enterprise', storage: { used: 2.5, total: 10, pct: 25 }, stats: { analyses: 147, datasets: 23, viz: 89 } };
+  const activity = [{ a: 'Uploaded dataset', t: '2h ago', type: 'upload' }, { a: 'Completed analysis', t: '5h ago', type: 'analysis' }, { a: 'Created dashboard', t: '1d ago', type: 'dash' }, { a: 'Shared report', t: '2d ago', type: 'share' }];
+  const TabPanel = ({ children, value, index }) => <div hidden={value !== index}>{value === index && <Box sx={{ pt: 3 }}>{children}</Box>}</div>;
+  const ic = { color: '#6C3AFF', fontSize: 20 };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h3" fontWeight={700} gutterBottom>
-          Profile
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Manage your account settings and preferences
-        </Typography>
-      </Box>
-
-      <Grid container spacing={4}>
-        {/* Sidebar - User Card */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ position: 'sticky', top: 100 }}>
-            <CardContent sx={{ p: 4, textAlign: 'center' }}>
-              <Avatar
-                sx={{
-                  width: 100,
-                  height: 100,
-                  mb: 3,
-                  bgcolor: 'primary.main',
-                  fontSize: '2.5rem',
-                  mx: 'auto'
-                }}
-              >
-                {userData.name[0].toUpperCase()}
-              </Avatar>
-
-              <Typography variant="h5" fontWeight={600} gutterBottom>
-                {userData.name}
-              </Typography>
-              
-              <Chip
-                label={userData.role}
-                color="primary"
-                variant="filled"
-                size="small"
-                sx={{ mb: 2 }}
-              />
-
-              <Box sx={{ textAlign: 'left', mt: 3 }}>
-                <ListItem>
-                  <ListItemIcon>
-                    <Email color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Email" secondary={userData.email} />
-                </ListItem>
-
-                <ListItem>
-                  <ListItemIcon>
-                    <Business color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Company" secondary={userData.company} />
-                </ListItem>
-
-                <ListItem>
-                  <ListItemIcon>
-                    <CalendarToday color="primary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Member since" secondary={userData.joinDate} />
-                </ListItem>
-
-                <ListItem>
-                  <ListItemIcon>
-                    <VerifiedUser color="primary" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="Plan" 
-                    secondary={
-                      <Chip 
-                        label={userData.plan} 
-                        color="success" 
-                        size="small" 
-                        variant="outlined" 
-                      />
-                    } 
-                  />
-                </ListItem>
-              </Box>
-
-              <Button
-                variant="outlined"
-                startIcon={<Edit />}
-                fullWidth
-                sx={{ mt: 3 }}
-                onClick={() => setIsEditing(!isEditing)}
-              >
-                {isEditing ? 'Cancel Edit' : 'Edit Profile'}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Storage Usage */}
-          <Card sx={{ mt: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Storage Usage
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Storage color="primary" sx={{ mr: 1 }} />
-                <Typography variant="body2">
-                  {userData.storage.used} GB of {userData.storage.total} GB used
-                </Typography>
-              </Box>
-              <LinearProgress 
-                variant="determinate" 
-                value={userData.storage.percentage} 
-                sx={{ mb: 1, height: 8, borderRadius: 4 }}
-              />
-              <Typography variant="caption" color="text.secondary">
-                {userData.storage.percentage}% utilized
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Main Content */}
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent sx={{ p: 0 }}>
-              <Tabs
-                value={activeTab}
-                onChange={(e, newValue) => setActiveTab(newValue)}
-                variant="scrollable"
-                scrollButtons="auto"
-                sx={{
-                  borderBottom: 1,
-                  borderColor: 'divider',
-                  px: 3
-                }}
-              >
-                {tabs.map((tab, index) => (
-                  <Tab
-                    key={index}
-                    label={tab.label}
-                    icon={tab.icon}
-                    iconPosition="start"
-                  />
-                ))}
-              </Tabs>
-
-              {/* Overview Tab */}
-              <TabPanel value={activeTab} index={0}>
-                <Box sx={{ p: 3 }}>
-                  <Grid container spacing={3}>
-                    {/* Statistics */}
-                    <Grid item xs={12} md={4}>
-                      <Paper sx={{ p: 3, textAlign: 'center' }}>
-                        <Analytics color="primary" sx={{ fontSize: 40, mb: 1 }} />
-                        <Typography variant="h4" fontWeight={700}>
-                          {userData.stats.analyses}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Analyses
-                        </Typography>
-                      </Paper>
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                      <Paper sx={{ p: 3, textAlign: 'center' }}>
-                        <Storage color="primary" sx={{ fontSize: 40, mb: 1 }} />
-                        <Typography variant="h4" fontWeight={700}>
-                          {userData.stats.datasets}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Datasets
-                        </Typography>
-                      </Paper>
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                      <Paper sx={{ p: 3, textAlign: 'center' }}>
-                        <Analytics color="primary" sx={{ fontSize: 40, mb: 1 }} />
-                        <Typography variant="h4" fontWeight={700}>
-                          {userData.stats.visualizations}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Visualizations
-                        </Typography>
-                      </Paper>
-                    </Grid>
-
-                    {/* Recent Activity */}
-                    <Grid item xs={12}>
-                      <Typography variant="h6" gutterBottom>
-                        Recent Activity
-                      </Typography>
-                      <List>
-                        {recentActivity.map((activity, index) => (
-                          <ListItem key={index}>
-                            <ListItemIcon>
-                              {activity.type === 'upload' && <CloudUpload color="primary" />}
-                              {activity.type === 'analysis' && <Analytics color="primary" />}
-                              {activity.type === 'dashboard' && <Analytics color="primary" />}
-                              {activity.type === 'share' && <Notifications color="primary" />}
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={activity.action}
-                              secondary={activity.time}
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
-                    </Grid>
-                  </Grid>
+    <Box sx={{ py: 4, background: '#fafbfc', minHeight: 'calc(100vh - 70px)' }}>
+      <Container maxWidth="lg">
+        <Box sx={{ mb: 4 }}><Typography variant="h3" sx={{ fontWeight: 700, mb: .5 }}>Profile</Typography><Typography variant="body1" sx={{ color: '#64748b' }}>Manage your account</Typography></Box>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Card sx={{ position: 'sticky', top: 86, border: '1px solid #f1f5f9' }}>
+              <CardContent sx={{ p: 3.5, textAlign: 'center' }}>
+                <Avatar sx={{ width: 80, height: 80, mb: 2, mx: 'auto', fontSize: '2rem' }}>{u.name[0].toUpperCase()}</Avatar>
+                <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>{u.name}</Typography>
+                <Chip label={u.role} size="small" sx={{ mb: 2 }} />
+                <Box sx={{ textAlign: 'left', mt: 2 }}>
+                  {[{ icon: <Email sx={ic} />, l: 'Email', v: u.email }, { icon: <Business sx={ic} />, l: 'Company', v: u.company }, { icon: <CalendarToday sx={ic} />, l: 'Member since', v: u.joinDate }, { icon: <VerifiedUser sx={ic} />, l: 'Plan', v: u.plan }].map((x, i) => (
+                    <ListItem key={i} sx={{ px: 0 }}><ListItemIcon sx={{ minWidth: 36 }}>{x.icon}</ListItemIcon><ListItemText primary={<Typography variant="caption" sx={{ color: '#94a3b8' }}>{x.l}</Typography>} secondary={<Typography variant="body2">{x.v}</Typography>} /></ListItem>
+                  ))}
                 </Box>
-              </TabPanel>
-
-              {/* Other tabs would go here with similar structure */}
-              <TabPanel value={activeTab} index={1}>
-                <Box sx={{ p: 3 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Activity History
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Detailed activity log and history will be displayed here.
-                  </Typography>
-                </Box>
-              </TabPanel>
-
-              <TabPanel value={activeTab} index={2}>
-                <Box sx={{ p: 3 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Account Settings
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Security and privacy settings will be displayed here.
-                  </Typography>
-                </Box>
-              </TabPanel>
-
-              <TabPanel value={activeTab} index={3}>
-                <Box sx={{ p: 3 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Billing Information
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Subscription and payment details will be displayed here.
-                  </Typography>
-                </Box>
-              </TabPanel>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Grid container spacing={2} sx={{ mt: 2 }}>
-            <Grid item xs={12} sm={6}>
-              <Button
-                variant="outlined"
-                startIcon={<Download />}
-                fullWidth
-                sx={{ py: 1.5 }}
-              >
-                Export Data
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Button
-                variant="outlined"
-                startIcon={<Notifications />}
-                fullWidth
-                sx={{ py: 1.5 }}
-              >
-                Notification Settings
-              </Button>
+                <Button variant="outlined" startIcon={<Edit />} fullWidth sx={{ mt: 2 }} onClick={() => setEditing(!editing)}>{editing ? 'Cancel' : 'Edit Profile'}</Button>
+              </CardContent>
+            </Card>
+            <Card sx={{ mt: 2, border: '1px solid #f1f5f9' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>Storage</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}><Storage sx={ic} /><Typography variant="body2" sx={{ color: '#64748b' }}>{u.storage.used} GB / {u.storage.total} GB</Typography></Box>
+                <LinearProgress variant="determinate" value={u.storage.pct} sx={{ height: 6, borderRadius: 3 }} />
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={8}>
+            <Card sx={{ border: '1px solid #f1f5f9' }}>
+              <CardContent sx={{ p: 0 }}>
+                <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto" sx={{ borderBottom: '1px solid #f1f5f9', px: 3 }}>
+                  {[{ l: 'Overview', i: <Person /> }, { l: 'Activity', i: <History /> }, { l: 'Security', i: <Security /> }, { l: 'Billing', i: <Payment /> }].map((t, i) => <Tab key={i} label={t.l} icon={t.i} iconPosition="start" />)}
+                </Tabs>
+                <TabPanel value={tab} index={0}>
+                  <Box sx={{ p: 3 }}>
+                    <Grid container spacing={2} sx={{ mb: 3 }}>
+                      {[{ icon: <Analytics sx={{ fontSize: 28, color: '#6C3AFF' }} />, v: u.stats.analyses, l: 'Analyses' }, { icon: <Storage sx={{ fontSize: 28, color: '#6C3AFF' }} />, v: u.stats.datasets, l: 'Datasets' }, { icon: <Analytics sx={{ fontSize: 28, color: '#a855f7' }} />, v: u.stats.viz, l: 'Visualizations' }].map((s, i) => (
+                        <Grid item xs={12} md={4} key={i}><Paper sx={{ p: 2.5, textAlign: 'center', border: '1px solid #f1f5f9' }}>{s.icon}<Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>{s.v}</Typography><Typography variant="caption" sx={{ color: '#94a3b8' }}>{s.l}</Typography></Paper></Grid>
+                      ))}
+                    </Grid>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Recent Activity</Typography>
+                    <List>{activity.map((a, i) => <ListItem key={i} sx={{ px: 0 }}><ListItemIcon sx={{ minWidth: 36 }}>{a.type === 'upload' ? <CloudUpload sx={ic} /> : <Analytics sx={{ color: '#a855f7', fontSize: 20 }} />}</ListItemIcon><ListItemText primary={a.a} secondary={a.t} /></ListItem>)}</List>
+                  </Box>
+                </TabPanel>
+                {[1, 2, 3].map(idx => <TabPanel key={idx} value={tab} index={idx}><Box sx={{ p: 3 }}><Typography sx={{ color: '#94a3b8' }}>{['', 'Activity history', 'Security settings', 'Billing info'][idx]} coming soon.</Typography></Box></TabPanel>)}
+              </CardContent>
+            </Card>
+            <Grid container spacing={2} sx={{ mt: 2 }}>
+              <Grid item xs={12} sm={6}><Button variant="outlined" startIcon={<Download />} fullWidth sx={{ py: 1.25 }}>Export Data</Button></Grid>
+              <Grid item xs={12} sm={6}><Button variant="outlined" startIcon={<Notifications />} fullWidth sx={{ py: 1.25 }}>Notifications</Button></Grid>
             </Grid>
           </Grid>
         </Grid>
-      </Grid>
-    </Container>
+      </Container>
+    </Box>
   );
 };
-
 export default Profile;

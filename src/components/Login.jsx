@@ -1,103 +1,66 @@
 import React, { useState } from 'react';
-import {
-  Card, CardContent, Typography, TextField, Button, Box,
-  Divider, InputAdornment, IconButton, Alert, Link, Container, Fade
-} from '@mui/material';
+import { Card, CardContent, Typography, TextField, Button, Box, Divider, InputAdornment, IconButton, Alert, Link, Container, Fade } from '@mui/material';
 import { Visibility, VisibilityOff, Email, Lock, ArrowForward } from '@mui/icons-material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-  const navigate = useNavigate();
+  const nav = useNavigate();
   const { login } = useAuth();
-  const [formData, setFormData] = useState({ email: '', password: '', showPassword: false });
-  const [errors, setErrors] = useState({});
+  const [fd, setFd] = useState({ email: '', password: '', show: false });
+  const [err, setErr] = useState({});
   const [loading, setLoading] = useState(false);
-  const [alert, setAlert] = useState({ open: false, message: '', severity: 'error' });
+  const [alert, setAlert] = useState({ open: false, msg: '' });
 
-  const handleChange = (field) => (e) => {
-    setFormData(prev => ({ ...prev, [field]: e.target.value }));
-    if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
+  const set = (f) => (e) => { setFd(p => ({ ...p, [f]: e.target.value })); if (err[f]) setErr(p => ({ ...p, [f]: '' })); };
+  const validate = () => {
+    const e = {};
+    if (!fd.email.trim()) e.email = 'Required'; else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fd.email)) e.email = 'Invalid email';
+    if (!fd.password.trim()) e.password = 'Required'; else if (fd.password.length < 6) e.password = 'Min 6 chars';
+    setErr(e); return !Object.keys(e).length;
+  };
+  const submit = async (e) => {
+    e.preventDefault(); if (!validate()) return; setLoading(true);
+    try { await login(fd.email, fd.password); nav('/dashboard', { replace: true }); }
+    catch (e) { setAlert({ open: true, msg: e.response?.data?.detail || 'Invalid credentials' }); }
+    finally { setLoading(false); }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Invalid email';
-    if (!formData.password.trim()) newErrors.password = 'Password is required';
-    else if (formData.password.length < 6) newErrors.password = 'Min 6 characters';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-    setLoading(true);
-    try {
-      await login(formData.email, formData.password);
-      navigate('/dashboard', { replace: true });
-    } catch (err) {
-      setAlert({ open: true, message: err.response?.data?.detail || 'Invalid email or password', severity: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const ic = { color: '#6C3AFF', fontSize: 20 };
 
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', py: 8 }}>
+    <Box sx={{ minHeight: 'calc(100vh - 70px)', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4, background: '#fafbfc' }}>
+      <Container maxWidth="sm">
         <Box sx={{ mb: 4, textAlign: 'center' }}>
-          <Typography variant="h3" sx={{ fontWeight: 800, background: 'linear-gradient(45deg, #7c4dff, #651fff)', backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', mb: 1 }}>
-            AnalytIQ
-          </Typography>
-          <Typography variant="body2" color="text.secondary">AI-Powered Data Analytics Platform</Typography>
+          <Typography variant="h3" sx={{ fontWeight: 800, color: '#6C3AFF', mb: 1 }}>AnalytIQ</Typography>
+          <Typography variant="body2" sx={{ color: '#94a3b8' }}>AI-Powered Data Analytics</Typography>
         </Box>
-
-        <Fade in timeout={800}>
-          <Card sx={{ width: '100%', maxWidth: 450, mx: 'auto', border: '1px solid', borderColor: 'divider' }}>
+        <Fade in timeout={500}>
+          <Card sx={{ maxWidth: 440, mx: 'auto', border: '1px solid #f1f5f9' }}>
             <CardContent sx={{ p: 4 }}>
               <Box textAlign="center" sx={{ mb: 4 }}>
-                <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>Welcome Back</Typography>
-                <Typography variant="body2" color="text.secondary">Sign in to your account</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 700, mb: .5 }}>Welcome back</Typography>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>Sign in to your account</Typography>
               </Box>
-
-              <form onSubmit={handleSubmit}>
-                <TextField label="Email" type="email" fullWidth value={formData.email} onChange={handleChange('email')}
-                  error={!!errors.email} helperText={errors.email} disabled={loading} sx={{ mb: 2 }}
-                  InputProps={{ startAdornment: <InputAdornment position="start"><Email color="primary" /></InputAdornment> }} />
-
-                <TextField label="Password" type={formData.showPassword ? 'text' : 'password'} fullWidth
-                  value={formData.password} onChange={handleChange('password')}
-                  error={!!errors.password} helperText={errors.password} disabled={loading} sx={{ mb: 3 }}
-                  InputProps={{
-                    startAdornment: <InputAdornment position="start"><Lock color="primary" /></InputAdornment>,
-                    endAdornment: <InputAdornment position="end"><IconButton onClick={() => setFormData(p => ({ ...p, showPassword: !p.showPassword }))}>{formData.showPassword ? <VisibilityOff /> : <Visibility />}</IconButton></InputAdornment>
-                  }} />
-
-                <Button type="submit" fullWidth variant="contained" disabled={loading} endIcon={!loading && <ArrowForward />}
-                  sx={{ py: 1.5, borderRadius: 2, fontWeight: 600, fontSize: '1rem' }}>
+              <form onSubmit={submit}>
+                <TextField label="Email" type="email" fullWidth value={fd.email} onChange={set('email')} error={!!err.email} helperText={err.email} disabled={loading} sx={{ mb: 2.5 }}
+                  InputProps={{ startAdornment: <InputAdornment position="start"><Email sx={ic} /></InputAdornment> }} />
+                <TextField label="Password" type={fd.show ? 'text' : 'password'} fullWidth value={fd.password} onChange={set('password')} error={!!err.password} helperText={err.password} disabled={loading} sx={{ mb: 3 }}
+                  InputProps={{ startAdornment: <InputAdornment position="start"><Lock sx={ic} /></InputAdornment>, endAdornment: <InputAdornment position="end"><IconButton size="small" onClick={() => setFd(p => ({ ...p, show: !p.show }))}>{fd.show ? <VisibilityOff sx={{ fontSize: 20 }} /> : <Visibility sx={{ fontSize: 20 }} />}</IconButton></InputAdornment> }} />
+                <Button type="submit" fullWidth variant="contained" disabled={loading} endIcon={!loading && <ArrowForward />} sx={{ py: 1.5, fontSize: '.95rem' }}>
                   {loading ? 'Signing in...' : 'Sign In'}
                 </Button>
               </form>
-
-              <Alert severity={alert.severity} sx={{ mt: 2, display: alert.open ? 'flex' : 'none' }}
-                onClose={() => setAlert(p => ({ ...p, open: false }))}>{alert.message}</Alert>
-
+              {alert.open && <Alert severity="error" sx={{ mt: 2 }} onClose={() => setAlert({ open: false, msg: '' })}>{alert.msg}</Alert>}
               <Divider sx={{ my: 3 }} />
-
               <Box textAlign="center">
-                <Typography variant="body2" color="text.secondary">
-                  Don't have an account?{' '}
-                  <Link component={RouterLink} to="/signup" color="primary" sx={{ textDecoration: 'none', fontWeight: 600 }}>Sign up</Link>
-                </Typography>
+                <Typography variant="body2" sx={{ color: '#64748b' }}>Don't have an account?{' '}<Link component={RouterLink} to="/signup" sx={{ color: '#6C3AFF', textDecoration: 'none', fontWeight: 600 }}>Sign up</Link></Typography>
               </Box>
             </CardContent>
           </Card>
         </Fade>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
-
 export default Login;

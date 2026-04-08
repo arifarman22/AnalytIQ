@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     # App
     APP_NAME: str = "AnalytIQ"
     APP_VERSION: str = "2.0.0"
-    DEBUG: bool = False
+    APP_DEBUG: bool = False
 
     # Database - Neon PostgreSQL
     DATABASE_URL: str = "postgresql+asyncpg://user:pass@host/dbname"

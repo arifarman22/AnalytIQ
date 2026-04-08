@@ -1,339 +1,104 @@
 import React, { useState } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
-  Box, 
-  IconButton,
-  Menu,
-  MenuItem,
-  Avatar,
-  Chip,
-  Drawer,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  useMediaQuery,
-  useTheme
-} from '@mui/material';
-import { 
-  Menu as MenuIcon,
-  Dashboard,
-  AccountCircle,
-  ExitToApp,
-  ContactPage,
-  AttachMoney,
-  Home,
-  Analytics,
-  Settings
-} from '@mui/icons-material';
+import { AppBar, Toolbar, Typography, Button, Box, IconButton, Menu, MenuItem, Avatar, Chip, Drawer, List, ListItem, ListItemText, ListItemIcon, Divider, useMediaQuery, useTheme } from '@mui/material';
+import { Menu as MenuIcon, Dashboard, AccountCircle, ExitToApp, ContactPage, AttachMoney, Home, Analytics, Settings } from '@mui/icons-material';
 import { Link, useLocation } from 'react-router-dom';
 
 const NavBar = ({ user, onLogout }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const location = useLocation();
-  
+  const mobile = useMediaQuery(theme.breakpoints.down('md'));
+  const loc = useLocation();
   const [anchorEl, setAnchorEl] = useState(null);
-  const [mobileDrawer, setMobileDrawer] = useState(false);
+  const [drawer, setDrawer] = useState(false);
 
-  const handleProfileMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const toggleMobileDrawer = () => {
-    setMobileDrawer(!mobileDrawer);
-  };
-
-  const handleLogout = () => {
-    handleMenuClose();
-    onLogout();
-  };
-
-  const navItems = [
-    { label: 'Home', path: '/', icon: <Home /> },
-    { label: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
-    ...(user ? [{ label: 'History', path: '/history', icon: <Analytics /> }] : []),
-    { label: 'Pricing', path: '/pricing', icon: <AttachMoney /> },
-    { label: 'Contact', path: '/contact', icon: <ContactPage /> },
+  const nav = [
+    { label: 'Home', path: '/' },
+    { label: 'Dashboard', path: '/dashboard' },
+    ...(user ? [{ label: 'History', path: '/history' }] : []),
+    { label: 'Pricing', path: '/pricing' },
+    { label: 'Contact', path: '/contact' },
   ];
-
-  const profileMenuItems = [
+  const profileMenu = [
     { label: 'Profile', path: '/profile', icon: <AccountCircle /> },
     { label: 'Settings', path: '/settings', icon: <Settings /> },
-    { label: 'Logout', action: handleLogout, icon: <ExitToApp /> },
+    { label: 'Logout', action: () => { setAnchorEl(null); onLogout(); }, icon: <ExitToApp /> },
   ];
 
-  const renderDesktopNav = () => (
-    <>
-      <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-        <Typography 
-          variant="h5" 
-          component={Link} 
-          to="/" 
-          sx={{ 
-            textDecoration: 'none',
-            fontWeight: 800,
-            background: 'linear-gradient(45deg, #7c4dff, #651fff)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            mr: 4
-          }}
-        >
-          AnalytIQ
-        </Typography>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {navItems.map((item) => (
-            <Button
-              key={item.label}
-              component={Link}
-              to={item.path}
-              startIcon={item.icon}
-              sx={{
-                mx: 1,
-                color: location.pathname === item.path ? 'primary.main' : 'text.primary',
-                fontWeight: location.pathname === item.path ? 600 : 400,
-                '&:hover': {
-                  backgroundColor: 'action.hover',
-                }
-              }}
-            >
-              {item.label}
-            </Button>
-          ))}
-        </Box>
-      </Box>
-
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        {user ? (
+  return (
+    <AppBar position="sticky" elevation={0} sx={{ background: 'rgba(255,255,255,.88)', backdropFilter: 'blur(16px)', borderBottom: '1px solid #e2e8f0', backgroundImage: 'none' }}>
+      <Toolbar sx={{ minHeight: { xs: 64, md: 70 }, maxWidth: 1280, width: '100%', mx: 'auto', px: { xs: 2, md: 3 } }}>
+        {mobile ? (
           <>
-            <Chip
-              avatar={<Avatar sx={{ bgcolor: 'primary.main' }}>{user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}</Avatar>}
-              label={user.name || user.email}
-              variant="outlined"
-              onClick={handleProfileMenuOpen}
-              sx={{
-                borderColor: 'divider',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                }
-              }}
-            />
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-              PaperProps={{
-                sx: {
-                  mt: 1.5,
-                  minWidth: 200,
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
-                }
-              }}
-            >
-              {profileMenuItems.map((item) => (
-                <MenuItem
-                  key={item.label}
-                  onClick={item.action || handleMenuClose}
-                  component={item.path ? Link : 'li'}
-                  to={item.path}
-                  sx={{
-                    py: 1.5,
-                    '&:hover': {
-                      backgroundColor: 'action.hover',
-                    }
-                  }}
-                >
-                  <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText>{item.label}</ListItemText>
-                </MenuItem>
-              ))}
-            </Menu>
+            <IconButton edge="start" onClick={() => setDrawer(true)} sx={{ mr: 1, color: '#0f172a' }}><MenuIcon /></IconButton>
+            <Typography variant="h6" component={Link} to="/" sx={{ textDecoration: 'none', fontWeight: 800, color: '#6C3AFF', flexGrow: 1 }}>AnalytIQ</Typography>
+            <Drawer anchor="right" open={drawer} onClose={() => setDrawer(false)} PaperProps={{ sx: { width: 280, background: '#fff' } }}>
+              <Box sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#0f172a' }}>Menu</Typography>
+                <Divider sx={{ mb: 2 }} />
+                <List>{nav.map(n => (
+                  <ListItem key={n.label} button component={Link} to={n.path} onClick={() => setDrawer(false)} selected={loc.pathname === n.path} sx={{ borderRadius: 2, mb: .5, '&.Mui-selected': { background: '#ede9fe', color: '#6C3AFF' } }}>
+                    <ListItemText primary={n.label} />
+                  </ListItem>
+                ))}</List>
+                <Divider sx={{ my: 2 }} />
+                {user ? (
+                  <List>{profileMenu.map(p => (
+                    <ListItem key={p.label} button component={p.path ? Link : 'li'} to={p.path} onClick={p.action || (() => setDrawer(false))} sx={{ borderRadius: 2, mb: .5 }}>
+                      <ListItemIcon sx={{ minWidth: 36 }}>{p.icon}</ListItemIcon>
+                      <ListItemText primary={p.label} />
+                    </ListItem>
+                  ))}</List>
+                ) : (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Button component={Link} to="/login" variant="outlined" fullWidth onClick={() => setDrawer(false)}>Sign In</Button>
+                    <Button component={Link} to="/signup" variant="contained" fullWidth onClick={() => setDrawer(false)}>Get Started</Button>
+                  </Box>
+                )}
+              </Box>
+            </Drawer>
           </>
         ) : (
           <>
-            <Button
-              component={Link}
-              to="/login"
-              variant="outlined"
-              sx={{
-                borderRadius: 2,
-                px: 3,
-                borderColor: 'divider',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                }
-              }}
-            >
-              Sign In
-            </Button>
-            <Button
-              component={Link}
-              to="/signup"
-              variant="contained"
-              sx={{
-                borderRadius: 2,
-                px: 3,
-                background: 'linear-gradient(45deg, #7c4dff, #651fff)',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #651fff, #7c4dff)'
-                }
-              }}
-            >
-              Get Started
-            </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+              <Typography variant="h5" component={Link} to="/" sx={{ textDecoration: 'none', fontWeight: 800, color: '#6C3AFF', mr: 5, letterSpacing: '-0.02em' }}>AnalytIQ</Typography>
+              <Box sx={{ display: 'flex', gap: .5 }}>
+                {nav.map(n => (
+                  <Button key={n.label} component={Link} to={n.path} sx={{
+                    px: 2, color: loc.pathname === n.path ? '#6C3AFF' : '#64748b', fontWeight: loc.pathname === n.path ? 600 : 400,
+                    fontSize: '.9rem', borderRadius: 50, background: loc.pathname === n.path ? '#ede9fe' : 'transparent',
+                    '&:hover': { background: '#f8f9fb', color: '#0f172a' },
+                  }}>{n.label}</Button>
+                ))}
+              </Box>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              {user ? (
+                <>
+                  <Chip
+                    avatar={<Avatar sx={{ width: 28, height: 28, fontSize: '.8rem' }}>{(user.name?.[0] || user.email?.[0])?.toUpperCase()}</Avatar>}
+                    label={user.name || user.email} variant="outlined"
+                    onClick={e => setAnchorEl(e.currentTarget)}
+                    sx={{ borderColor: '#e2e8f0', '&:hover': { borderColor: '#c4b5fd', background: '#faf5ff' } }}
+                  />
+                  <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)} PaperProps={{ sx: { mt: 1.5, minWidth: 200, borderRadius: 3, boxShadow: '0 8px 30px rgba(0,0,0,.1)' } }}>
+                    {profileMenu.map(p => (
+                      <MenuItem key={p.label} onClick={p.action || (() => setAnchorEl(null))} component={p.path ? Link : 'li'} to={p.path} sx={{ py: 1.5 }}>
+                        <ListItemIcon sx={{ color: '#64748b', minWidth: 36 }}>{p.icon}</ListItemIcon>
+                        <ListItemText>{p.label}</ListItemText>
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                </>
+              ) : (
+                <>
+                  <Button component={Link} to="/login" variant="outlined" sx={{ px: 3 }}>Sign In</Button>
+                  <Button component={Link} to="/signup" variant="contained" sx={{ px: 3 }}>Get Started</Button>
+                </>
+              )}
+            </Box>
           </>
         )}
-      </Box>
-    </>
-  );
-
-  const renderMobileNav = () => (
-    <>
-      <IconButton
-        edge="start"
-        color="inherit"
-        onClick={toggleMobileDrawer}
-        sx={{ mr: 2 }}
-      >
-        <MenuIcon />
-      </IconButton>
-
-      <Typography 
-        variant="h6" 
-        component={Link} 
-        to="/" 
-        sx={{ 
-          textDecoration: 'none',
-          fontWeight: 700,
-          background: 'linear-gradient(45deg, #7c4dff, #651fff)',
-          backgroundClip: 'text',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          flexGrow: 1
-        }}
-      >
-        AnalytIQ
-      </Typography>
-
-      <Drawer
-        anchor="right"
-        open={mobileDrawer}
-        onClose={toggleMobileDrawer}
-        PaperProps={{
-          sx: {
-            width: 280,
-            backgroundColor: 'background.paper'
-          }
-        }}
-      >
-        <Box sx={{ p: 2 }}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-            Menu
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          
-          <List>
-            {navItems.map((item) => (
-              <ListItem
-                key={item.label}
-                button
-                component={Link}
-                to={item.path}
-                onClick={toggleMobileDrawer}
-                selected={location.pathname === item.path}
-                sx={{
-                  borderRadius: 1,
-                  mb: 0.5,
-                  '&.Mui-selected': {
-                    backgroundColor: 'primary.main',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: 'primary.dark',
-                    }
-                  }
-                }}
-              >
-                <ListItemIcon sx={{ color: 'inherit' }}>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.label} />
-              </ListItem>
-            ))}
-          </List>
-
-          <Divider sx={{ my: 2 }} />
-
-          {user ? (
-            <List>
-              {profileMenuItems.map((item) => (
-                <ListItem
-                  key={item.label}
-                  button
-                  component={item.path ? Link : 'li'}
-                  to={item.path}
-                  onClick={item.action || toggleMobileDrawer}
-                  sx={{ borderRadius: 1, mb: 0.5 }}
-                >
-                  <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.label} />
-                </ListItem>
-              ))}
-            </List>
-          ) : (
-            <Box sx={{ p: 2 }}>
-              <Button
-                fullWidth
-                component={Link}
-                to="/login"
-                variant="outlined"
-                sx={{ mb: 1, borderRadius: 2 }}
-                onClick={toggleMobileDrawer}
-              >
-                Sign In
-              </Button>
-              <Button
-                fullWidth
-                component={Link}
-                to="/signup"
-                variant="contained"
-                sx={{ borderRadius: 2 }}
-                onClick={toggleMobileDrawer}
-              >
-                Get Started
-              </Button>
-            </Box>
-          )}
-        </Box>
-      </Drawer>
-    </>
-  );
-
-  return (
-    <AppBar 
-      position="static" 
-      elevation={1}
-      sx={{
-        backgroundColor: 'background.paper',
-        color: 'text.primary',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        backdropFilter: 'blur(10px)',
-        backgroundImage: 'none'
-      }}
-    >
-      <Toolbar sx={{ minHeight: { xs: 64, md: 72 } }}>
-        {isMobile ? renderMobileNav() : renderDesktopNav()}
       </Toolbar>
     </AppBar>
   );
 };
-
 export default NavBar;

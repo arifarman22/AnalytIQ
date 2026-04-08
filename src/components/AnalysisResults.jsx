@@ -1,505 +1,62 @@
-// AnalysisResults component (same as before, now uses dark theme)
 import React from 'react';
-import { Card, CardContent, Typography, Grid, Table, TableBody, TableCell, TableRow, TableHead, Paper, Chip, Divider, Stack } from '@mui/material';
+import { Card, CardContent, Typography, Grid, Table, TableBody, TableCell, TableRow, TableHead, Paper, Chip, Divider, Stack, Box } from '@mui/material';
+
+const Section = ({ title, children }) => (
+  <Card sx={{ mb: 2, border: '1px solid #f1f5f9' }}>
+    <CardContent sx={{ p: 3 }}>
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, fontSize: '1rem', color: '#6C3AFF' }}>{title}</Typography>
+      {children}
+    </CardContent>
+  </Card>
+);
 
 const AnalysisResults = ({ analysisResult, datasetId }) => {
   if (!analysisResult) return null;
   const { eda } = analysisResult;
-  const renderDatasetInfo = () => {
-    if (!eda?.dataset_info) return null;
-    const info = eda.dataset_info;
-    return (
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="h6">Dataset Overview</Typography>
-          <Table size="small">
-            <TableBody>
-              <TableRow><TableCell>Rows</TableCell><TableCell>{info.rows}</TableCell></TableRow>
-              <TableRow><TableCell>Columns</TableCell><TableCell>{info.columns}</TableCell></TableRow>
-              <TableRow><TableCell>Total Memory (bytes)</TableCell><TableCell>{info.total_memory_bytes}</TableCell></TableRow>
-              <TableRow><TableCell>Duplicate Rows</TableCell><TableCell>{info.duplicate_rows} ({info.duplicate_percentage}%)</TableCell></TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    );
-  };
 
-  const renderDtypes = () => {
-    if (!eda?.dtypes) return null;
-    return (
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="h6">Column Types</Typography>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Column</TableCell>
-                <TableCell>Type</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {Object.entries(eda.dtypes).map(([col, dtype]) => (
-                <TableRow key={col}>
-                  <TableCell>{col}</TableCell>
-                  <TableCell>{dtype}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    );
-  };
-
-
-  // Helper to render summary stats
-  const renderSummaryStats = () => {
-    if (!eda?.numeric_analysis?.summary_stats) return null;
-    const stats = eda.numeric_analysis.summary_stats;
-    return (
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="h6">Summary Statistics</Typography>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Stat</TableCell>
-                {Object.keys(stats).map((col) => (
-                  <TableCell key={col}>{col}</TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {Object.keys(stats[Object.keys(stats)[0]]).map((stat) => (
-                <TableRow key={stat}>
-                  <TableCell>{stat}</TableCell>
-                  {Object.keys(stats).map((col) => (
-                    <TableCell key={col+stat}>{stats[col][stat]}</TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  // Helper to render missing values
-  const renderMissingValues = () => {
-    if (!eda?.missing_values?.count) return null;
-    return (
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="h6">Missing Values</Typography>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Column</TableCell>
-                <TableCell>Count</TableCell>
-                <TableCell>Percentage</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {Object.keys(eda.missing_values.count).map((col) => (
-                <TableRow key={col}>
-                  <TableCell>{col}</TableCell>
-                  <TableCell>{eda.missing_values.count[col]}</TableCell>
-                  <TableCell>{eda.missing_values.percentage[col]}%</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  // Helper to render correlations
-  const renderCorrelations = () => {
-    if (!eda?.correlation_analysis?.highly_correlated_pairs) return null;
-    const pairs = eda.correlation_analysis.highly_correlated_pairs;
-    if (!pairs.length) return null;
-    return (
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="h6">Highly Correlated Pairs (|r| &gt; 0.8)</Typography>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Feature 1</TableCell>
-                <TableCell>Feature 2</TableCell>
-                <TableCell>Correlation</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {pairs.map((pair, idx) => (
-                <TableRow key={idx}>
-                  <TableCell>{pair.feature1}</TableCell>
-                  <TableCell>{pair.feature2}</TableCell>
-                  <TableCell>{pair.correlation}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  // Helper to render cardinality
-  const renderCardinality = () => {
-    if (!eda?.cardinality?.high_cardinality_features) return null;
-    const features = eda.cardinality.high_cardinality_features;
-    if (!Object.keys(features).length) return null;
-    return (
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="h6">High Cardinality Features</Typography>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Feature</TableCell>
-                <TableCell>Unique Values</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {Object.entries(features).map(([feature, count]) => (
-                <TableRow key={feature}>
-                  <TableCell>{feature}</TableCell>
-                  <TableCell>{count}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    );
-  };
+  const renderDatasetInfo = () => { if (!eda?.dataset_info) return null; const i = eda.dataset_info; return <Section title="Dataset Overview"><Table size="small"><TableBody><TableRow><TableCell>Rows</TableCell><TableCell>{i.rows}</TableCell></TableRow><TableRow><TableCell>Columns</TableCell><TableCell>{i.columns}</TableCell></TableRow><TableRow><TableCell>Memory</TableCell><TableCell>{i.total_memory_bytes} bytes</TableCell></TableRow><TableRow><TableCell>Duplicates</TableCell><TableCell>{i.duplicate_rows} ({i.duplicate_percentage}%)</TableCell></TableRow></TableBody></Table></Section>; };
+  const renderDtypes = () => { if (!eda?.dtypes) return null; return <Section title="Column Types"><Table size="small"><TableHead><TableRow><TableCell>Column</TableCell><TableCell>Type</TableCell></TableRow></TableHead><TableBody>{Object.entries(eda.dtypes).map(([c, d]) => <TableRow key={c}><TableCell>{c}</TableCell><TableCell>{d}</TableCell></TableRow>)}</TableBody></Table></Section>; };
+  const renderSummaryStats = () => { if (!eda?.numeric_analysis?.summary_stats) return null; const s = eda.numeric_analysis.summary_stats; return <Section title="Summary Statistics"><Box sx={{ overflowX: 'auto' }}><Table size="small"><TableHead><TableRow><TableCell>Stat</TableCell>{Object.keys(s).map(c => <TableCell key={c}>{c}</TableCell>)}</TableRow></TableHead><TableBody>{Object.keys(s[Object.keys(s)[0]]).map(st => <TableRow key={st}><TableCell>{st}</TableCell>{Object.keys(s).map(c => <TableCell key={c + st}>{s[c][st]}</TableCell>)}</TableRow>)}</TableBody></Table></Box></Section>; };
+  const renderMissing = () => { if (!eda?.missing_values?.count) return null; return <Section title="Missing Values"><Table size="small"><TableHead><TableRow><TableCell>Column</TableCell><TableCell>Count</TableCell><TableCell>%</TableCell></TableRow></TableHead><TableBody>{Object.keys(eda.missing_values.count).map(c => <TableRow key={c}><TableCell>{c}</TableCell><TableCell>{eda.missing_values.count[c]}</TableCell><TableCell>{eda.missing_values.percentage[c]}%</TableCell></TableRow>)}</TableBody></Table></Section>; };
+  const renderCorr = () => { if (!eda?.correlation_analysis?.highly_correlated_pairs?.length) return null; return <Section title="Highly Correlated Pairs"><Table size="small"><TableHead><TableRow><TableCell>Feature 1</TableCell><TableCell>Feature 2</TableCell><TableCell>r</TableCell></TableRow></TableHead><TableBody>{eda.correlation_analysis.highly_correlated_pairs.map((p, i) => <TableRow key={i}><TableCell>{p.feature1}</TableCell><TableCell>{p.feature2}</TableCell><TableCell>{p.correlation}</TableCell></TableRow>)}</TableBody></Table></Section>; };
 
   const renderNumericExtras = () => {
     if (!eda?.numeric_analysis) return null;
-    const { skewness, kurtosis, zeros_count, outliers_iqr, normality_tests } = eda.numeric_analysis;
-    return (
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        {skewness && (
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">Skewness</Typography>
-                <Table size="small">
-                  <TableBody>
-                    {Object.entries(skewness).map(([col, val]) => (
-                      <TableRow key={col}><TableCell>{col}</TableCell><TableCell>{val}</TableCell></TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-        {kurtosis && (
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">Kurtosis</Typography>
-                <Table size="small">
-                  <TableBody>
-                    {Object.entries(kurtosis).map(([col, val]) => (
-                      <TableRow key={col}><TableCell>{col}</TableCell><TableCell>{val}</TableCell></TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-        {zeros_count && (
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">Zero Counts</Typography>
-                <Table size="small">
-                  <TableBody>
-                    {Object.entries(zeros_count).map(([col, val]) => (
-                      <TableRow key={col}><TableCell>{col}</TableCell><TableCell>{val}</TableCell></TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-        {outliers_iqr && (
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">Outliers (IQR Method)</Typography>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Column</TableCell>
-                      <TableCell>Count</TableCell>
-                      <TableCell>Percentage</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {Object.entries(outliers_iqr).map(([col, stats]) => (
-                      <TableRow key={col}>
-                        <TableCell>{col}</TableCell>
-                        <TableCell>{stats.count}</TableCell>
-                        <TableCell>{stats.percentage}%</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-        {normality_tests && Object.keys(normality_tests).length > 0 && (
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">Normality Tests</Typography>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Column</TableCell>
-                      <TableCell>Shapiro-Wilk p</TableCell>
-                      <TableCell>D'Agostino K² p</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {Object.entries(normality_tests).map(([col, tests]) => (
-                      <TableRow key={col}>
-                        <TableCell>{col}</TableCell>
-                        <TableCell>{tests?.shapiro_wilk?.p_value ?? '-'}</TableCell>
-                        <TableCell>{tests?.dagostino_k2?.p_value ?? '-'}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-      </Grid>
-    );
+    const { skewness, kurtosis, outliers_iqr, normality_tests } = eda.numeric_analysis;
+    return <Grid container spacing={2} sx={{ mb: 2 }}>
+      {skewness && <Grid item xs={12} md={6}><Section title="Skewness"><Table size="small"><TableBody>{Object.entries(skewness).map(([c, v]) => <TableRow key={c}><TableCell>{c}</TableCell><TableCell>{v}</TableCell></TableRow>)}</TableBody></Table></Section></Grid>}
+      {kurtosis && <Grid item xs={12} md={6}><Section title="Kurtosis"><Table size="small"><TableBody>{Object.entries(kurtosis).map(([c, v]) => <TableRow key={c}><TableCell>{c}</TableCell><TableCell>{v}</TableCell></TableRow>)}</TableBody></Table></Section></Grid>}
+      {outliers_iqr && <Grid item xs={12} md={6}><Section title="Outliers (IQR)"><Table size="small"><TableHead><TableRow><TableCell>Col</TableCell><TableCell>Count</TableCell><TableCell>%</TableCell></TableRow></TableHead><TableBody>{Object.entries(outliers_iqr).map(([c, s]) => <TableRow key={c}><TableCell>{c}</TableCell><TableCell>{s.count}</TableCell><TableCell>{s.percentage}%</TableCell></TableRow>)}</TableBody></Table></Section></Grid>}
+      {normality_tests && Object.keys(normality_tests).length > 0 && <Grid item xs={12}><Section title="Normality Tests"><Table size="small"><TableHead><TableRow><TableCell>Col</TableCell><TableCell>Shapiro p</TableCell><TableCell>D'Agostino p</TableCell></TableRow></TableHead><TableBody>{Object.entries(normality_tests).map(([c, t]) => <TableRow key={c}><TableCell>{c}</TableCell><TableCell>{t?.shapiro_wilk?.p_value ?? '-'}</TableCell><TableCell>{t?.dagostino_k2?.p_value ?? '-'}</TableCell></TableRow>)}</TableBody></Table></Section></Grid>}
+    </Grid>;
   };
 
   const renderCategorical = () => {
     if (!eda?.categorical_analysis) return null;
     const { value_counts, unique_values, entropy } = eda.categorical_analysis;
-    return (
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="h6">Categorical Analysis</Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>Top Value Counts (up to 10)</Typography>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Column</TableCell>
-                    <TableCell>Value</TableCell>
-                    <TableCell>Count</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Object.entries(value_counts).flatMap(([col, counts]) => (
-                    Object.entries(counts).map(([val, cnt]) => (
-                      <TableRow key={`${col}-${val}`}>
-                        <TableCell>{col}</TableCell>
-                        <TableCell>{val}</TableCell>
-                        <TableCell>{cnt}</TableCell>
-                      </TableRow>
-                    ))
-                  ))}
-                </TableBody>
-              </Table>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>Unique Values & Entropy</Typography>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Column</TableCell>
-                    <TableCell>Unique</TableCell>
-                    <TableCell>Entropy</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Object.keys(unique_values).map((col) => (
-                    <TableRow key={col}>
-                      <TableCell>{col}</TableCell>
-                      <TableCell>{unique_values[col]}</TableCell>
-                      <TableCell>{entropy[col]?.toFixed(3)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-    );
+    return <Section title="Categorical Analysis"><Grid container spacing={2}>
+      <Grid item xs={12} md={6}><Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: .5 }}>Top Values</Typography><Table size="small"><TableHead><TableRow><TableCell>Col</TableCell><TableCell>Value</TableCell><TableCell>Count</TableCell></TableRow></TableHead><TableBody>{Object.entries(value_counts).flatMap(([c, cs]) => Object.entries(cs).map(([v, n]) => <TableRow key={`${c}-${v}`}><TableCell>{c}</TableCell><TableCell>{v}</TableCell><TableCell>{n}</TableCell></TableRow>))}</TableBody></Table></Grid>
+      <Grid item xs={12} md={6}><Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: .5 }}>Unique & Entropy</Typography><Table size="small"><TableHead><TableRow><TableCell>Col</TableCell><TableCell>Unique</TableCell><TableCell>Entropy</TableCell></TableRow></TableHead><TableBody>{Object.keys(unique_values).map(c => <TableRow key={c}><TableCell>{c}</TableCell><TableCell>{unique_values[c]}</TableCell><TableCell>{entropy[c]?.toFixed(3)}</TableCell></TableRow>)}</TableBody></Table></Grid>
+    </Grid></Section>;
   };
 
-  const renderCatNumRelationships = () => {
-    const rel = eda?.categorical_numeric_relationships;
-    if (!rel || Object.keys(rel).length === 0) return null;
-    return (
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="h6">Categorical-Numeric Relationships (ANOVA)</Typography>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Category</TableCell>
-                <TableCell>Numeric</TableCell>
-                <TableCell>F-stat</TableCell>
-                <TableCell>p-value</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {Object.entries(rel).flatMap(([cat, nums]) => (
-                Object.entries(nums).map(([num, stats]) => (
-                  <TableRow key={`${cat}-${num}`}>
-                    <TableCell>{cat}</TableCell>
-                    <TableCell>{num}</TableCell>
-                    <TableCell>{stats.anova_f_stat?.toFixed(3)}</TableCell>
-                    <TableCell>{stats.anova_p_value?.toFixed(3)}</TableCell>
-                  </TableRow>
-                ))
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    );
-  };
+  const renderCatNum = () => { const r = eda?.categorical_numeric_relationships; if (!r || !Object.keys(r).length) return null; return <Section title="ANOVA Relationships"><Table size="small"><TableHead><TableRow><TableCell>Cat</TableCell><TableCell>Num</TableCell><TableCell>F</TableCell><TableCell>p</TableCell></TableRow></TableHead><TableBody>{Object.entries(r).flatMap(([c, ns]) => Object.entries(ns).map(([n, s]) => <TableRow key={`${c}-${n}`}><TableCell>{c}</TableCell><TableCell>{n}</TableCell><TableCell>{s.anova_f_stat?.toFixed(3)}</TableCell><TableCell>{s.anova_p_value?.toFixed(3)}</TableCell></TableRow>))}</TableBody></Table></Section>; };
 
-  const renderMultivariate = () => {
-    const mv = eda?.multivariate_analysis;
-    if (!mv) return null;
-    return (
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Typography variant="h6">Multivariate Analysis Readiness</Typography>
-          <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-            <Chip label={`Suitable for PCA: ${mv.suitable_for_pca ? 'Yes' : 'No'}`} color={mv.suitable_for_pca ? 'success' : 'default'} />
-          </Stack>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>Constant Variables</Typography>
-              {mv.constant_variables?.length ? (
-                <ul style={{ paddingLeft: '1.2em', margin: 0 }}>
-                  {mv.constant_variables.map((v) => (<li key={v}>{v}</li>))}
-                </ul>
-              ) : (
-                <Typography variant="body2" color="text.secondary">None</Typography>
-              )}
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>Low Variance Variables</Typography>
-              {mv.low_variance_variables?.length ? (
-                <ul style={{ paddingLeft: '1.2em', margin: 0 }}>
-                  {mv.low_variance_variables.map((v) => (<li key={v}>{v}</li>))}
-                </ul>
-              ) : (
-                <Typography variant="body2" color="text.secondary">None</Typography>
-              )}
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-    );
-  };
+  const renderMulti = () => { const m = eda?.multivariate_analysis; if (!m) return null; return <Section title="Multivariate Readiness"><Chip label={`PCA: ${m.suitable_for_pca ? 'Yes' : 'No'}`} size="small" sx={{ mb: 2, background: m.suitable_for_pca ? '#dcfce7' : '#f1f5f9', color: m.suitable_for_pca ? '#16a34a' : '#64748b' }} /></Section>; };
 
   return (
     <div className="analysis-results">
-      <Typography variant="h4" gutterBottom>Analysis Results</Typography>
-      <Typography variant="subtitle2" gutterBottom>Dataset ID: {datasetId}</Typography>
-      <Divider sx={{ mb: 2 }} />
-
-      {/* Executive Summary */}
-      {analysisResult.llm?.executive_summary && (
-        <Card sx={{ mb: 2 }}>
-          <CardContent>
-            <Typography variant="h6">Executive Summary</Typography>
-            <Typography>{analysisResult.llm.executive_summary}</Typography>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Key Findings */}
-      {analysisResult.llm?.key_findings && (
-        <Card sx={{ mb: 2 }}>
-          <CardContent>
-            <Typography variant="h6">Key Findings</Typography>
-            <ul style={{ paddingLeft: '1.2em' }}>
-              {analysisResult.llm.key_findings.map((finding, index) => (
-                <li key={index}>{finding}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* EDA Insights */}
-      {renderDatasetInfo()}
-      {renderDtypes()}
-      {renderSummaryStats()}
-      {renderMissingValues()}
-      {renderCorrelations()}
-      {renderCardinality()}
-      {renderNumericExtras()}
-      {renderCategorical()}
-      {renderCatNumRelationships()}
-      {renderMultivariate()}
-
-      {/* Visualizations */}
-      {analysisResult.plots && analysisResult.plots.length > 0 && (
-        <Card sx={{ mb: 2 }}>
-          <CardContent>
-            <Typography variant="h6">Visualizations</Typography>
-            <Grid container spacing={2}>
-              {analysisResult.plots.map((plot, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                  <Paper elevation={2} sx={{ p: 1, mb: 2 }}>
-                    <Typography variant="subtitle2">{plot.name}</Typography>
-                    <img 
-                      src={`data:${plot.mime};base64,${plot.b64}`} 
-                      alt={plot.name}
-                      style={{ width: '100%', borderRadius: 4 }}
-                    />
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Next Steps */}
-      {analysisResult.llm?.next_steps && (
-        <Card sx={{ mb: 2 }}>
-          <CardContent>
-            <Typography variant="h6">Recommended Next Steps</Typography>
-            <ul style={{ paddingLeft: '1.2em' }}>
-              {analysisResult.llm.next_steps.map((step, index) => (
-                <li key={index}>• {step}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Removed raw EDA JSON dump in favor of structured UI */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: .5 }}>Analysis Results</Typography>
+        <Typography variant="caption" sx={{ color: '#94a3b8' }}>Dataset: {datasetId}</Typography>
+      </Box>
+      <Divider sx={{ mb: 3 }} />
+      {analysisResult.llm?.executive_summary && <Section title="Executive Summary"><Typography variant="body2" sx={{ color: '#64748b', lineHeight: 1.8 }}>{analysisResult.llm.executive_summary}</Typography></Section>}
+      {analysisResult.llm?.key_findings && <Section title="Key Findings"><ul style={{ paddingLeft: '1.2em', margin: 0 }}>{analysisResult.llm.key_findings.map((f, i) => <li key={i} style={{ color: '#64748b', marginBottom: '.5rem', lineHeight: 1.7 }}>{f}</li>)}</ul></Section>}
+      {renderDatasetInfo()}{renderDtypes()}{renderSummaryStats()}{renderMissing()}{renderCorr()}{renderNumericExtras()}{renderCategorical()}{renderCatNum()}{renderMulti()}
+      {analysisResult.plots?.length > 0 && <Section title="Visualizations"><Grid container spacing={2}>{analysisResult.plots.map((p, i) => <Grid item xs={12} sm={6} md={4} key={i}><Paper sx={{ p: 1.5, border: '1px solid #f1f5f9' }}><Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>{p.name}</Typography>{p.mime === 'text/html' ? <iframe srcDoc={atob(p.b64)} title={p.name} style={{ width: '100%', height: 400, border: 'none', borderRadius: 8, marginTop: 8 }} sandbox="allow-scripts allow-same-origin" /> : <img src={`data:${p.mime};base64,${p.b64}`} alt={p.name} style={{ width: '100%', borderRadius: 8, marginTop: 8 }} />}</Paper></Grid>)}</Grid></Section>}
+      {analysisResult.llm?.next_steps && <Section title="Next Steps"><ul style={{ paddingLeft: '1.2em', margin: 0 }}>{analysisResult.llm.next_steps.map((s, i) => <li key={i} style={{ color: '#64748b', marginBottom: '.5rem', lineHeight: 1.7 }}>{s}</li>)}</ul></Section>}
     </div>
   );
 };
-
 export default AnalysisResults;
