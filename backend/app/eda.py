@@ -12,13 +12,9 @@ import warnings
 warnings.filterwarnings('ignore')
 
 def df_to_base64_png(fig):
-    """Convert plotly figure to base64 encoded PNG, fallback to HTML"""
-    try:
-        img_bytes = fig.to_image(format='png', width=1000, height=600, scale=2)
-        return {'b64': base64.b64encode(img_bytes).decode('utf-8'), 'mime': 'image/png'}
-    except Exception:
-        html_str = fig.to_html(include_plotlyjs='cdn', full_html=True)
-        return {'b64': base64.b64encode(html_str.encode('utf-8')).decode('utf-8'), 'mime': 'text/html'}
+    """Convert plotly figure to base64 encoded HTML"""
+    html_str = fig.to_html(include_plotlyjs='cdn', full_html=True)
+    return {'b64': base64.b64encode(html_str.encode('utf-8')).decode('utf-8'), 'mime': 'text/html'}
 
 def make_plot(name, fig):
     result = df_to_base64_png(fig)

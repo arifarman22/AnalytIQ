@@ -4,14 +4,14 @@ pandas
 openpyxl
 python-multipart
 plotly
-kaleido
 openai>=1.0.0
 scipy
 scikit-learn
 python-dotenv
 pydantic>=2.0.0
 pydantic-settings
-numpy
+email-validator
+numpy<2
 # Database - Neon PostgreSQL
 asyncpg
 sqlalchemy[asyncio]>=2.0.0
