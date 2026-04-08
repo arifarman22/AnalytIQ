@@ -6,7 +6,6 @@ python-multipart
 plotly
 openai>=1.0.0
 scipy
-scikit-learn
 python-dotenv
 pydantic>=2.0.0
 pydantic-settings
@@ -15,7 +14,6 @@ numpy<2
 # Database - Neon PostgreSQL
 asyncpg
 sqlalchemy[asyncio]>=2.0.0
-alembic
 # Auth
 python-jose[cryptography]
 passlib[bcrypt]

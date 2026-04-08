@@ -6,7 +6,6 @@ from plotly.subplots import make_subplots
 import base64
 import io
 from scipy import stats
-from sklearn.preprocessing import LabelEncoder
 from scipy.stats import shapiro, normaltest, anderson, chi2_contingency
 import warnings
 warnings.filterwarnings('ignore')
