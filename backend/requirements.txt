@@ -1,11 +1,17 @@
 fastapi>=0.104.0
 uvicorn>=0.24.0
+pandas
+openpyxl
 python-multipart
+plotly
+openai>=1.0.0
+scipy
 python-dotenv
 pydantic>=2.0.0
 pydantic-settings
 email-validator
-# Database
+numpy<2
+# Database - Neon PostgreSQL
 asyncpg
 sqlalchemy[asyncio]>=2.0.0
 # Auth
@@ -14,14 +20,6 @@ passlib[bcrypt]
 bcrypt==4.0.1
 # Rate limiting
 slowapi
-# Analytics (kept minimal for serverless)
-pandas
-openpyxl
-numpy<2
-plotly
-scipy
-# AI
-openai>=1.0.0
-# Utils
+# Production
 httpx
 python-dateutil
