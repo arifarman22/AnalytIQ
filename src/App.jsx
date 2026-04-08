@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -17,6 +17,7 @@ import Pricing from './components/Pricing';
 import Contact from './components/Contact';
 import AnalysisHistory from './components/AnalysisHistory';
 import Footer from './components/Footer';
+import SplashScreen from './components/SplashScreen';
 import './styles.css';
 import api from './utils/api';
 
@@ -133,9 +134,21 @@ function AppRoutes() {
 }
 
 export default function App() {
+  const [splash, setSplash] = useState(true);
+  const [splashVisible, setSplashVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSplashVisible(false);
+      setTimeout(() => setSplash(false), 600);
+    }, 2200);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      {splash && <SplashScreen visible={splashVisible} />}
       <AuthProvider>
         <Router><AppRoutes /></Router>
       </AuthProvider>
