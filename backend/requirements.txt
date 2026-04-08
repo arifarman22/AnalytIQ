@@ -1,2 +1,27 @@
 fastapi>=0.104.0
 uvicorn>=0.24.0
+python-multipart
+python-dotenv
+pydantic>=2.0.0
+pydantic-settings
+email-validator
+# Database
+asyncpg
+sqlalchemy[asyncio]>=2.0.0
+# Auth
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==4.0.1
+# Rate limiting
+slowapi
+# Analytics
+pandas
+openpyxl
+numpy<2
+scipy
+plotly
+# AI
+openai>=1.0.0
+# Utils
+httpx
+python-dateutil
