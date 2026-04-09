@@ -82,18 +82,23 @@ def generate_eda(df: pd.DataFrame):
             # Normality tests
             data = numeric_df[col].dropna()
             if len(data) > 3:
+                eda['numeric_analysis']['normality_tests'][col] = {}
+                
                 # Shapiro-Wilk test (for smaller samples)
                 if len(data) < 5000:
                     shapiro_stat, shapiro_p = shapiro(data)
-                    eda['numeric_analysis']['normality_tests'][col] = {
-                        'shapiro_wilk': {'statistic': float(shapiro_stat), 'p_value': float(shapiro_p)}
+                    eda['numeric_analysis']['normality_tests'][col]['shapiro_wilk'] = {
+                        'statistic': float(shapiro_stat), 'p_value': float(shapiro_p)
                     }
                 
                 # D'Agostino's K^2 test
-                k2_stat, k2_p = normaltest(data)
-                eda['numeric_analysis']['normality_tests'][col].update({
-                    'dagostino_k2': {'statistic': float(k2_stat), 'p_value': float(k2_p)}
-                })
+                try:
+                    k2_stat, k2_p = normaltest(data)
+                    eda['numeric_analysis']['normality_tests'][col]['dagostino_k2'] = {
+                        'statistic': float(k2_stat), 'p_value': float(k2_p)
+                    }
+                except Exception:
+                    pass
     
     # Categorical analysis
     categorical_cols = df.select_dtypes(include=['object', 'category']).columns
