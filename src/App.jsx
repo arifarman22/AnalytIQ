@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import FileUploader from './components/FileUploader';
 import PromptBox from './components/PromptBox';
@@ -59,6 +61,7 @@ function ProtectedRoute({ children }) {
 }
 
 function Dashboard() {
+  const { user } = useAuth();
   const [file, setFile] = useState(null);
   const [datasetId, setDatasetId] = useState(null);
   const [prompt, setPrompt] = useState('');
@@ -66,6 +69,9 @@ function Dashboard() {
   const [uploadResponse, setUploadResponse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const step = !datasetId ? 0 : !analysisResult ? 1 : 2;
+  const steps = ['Upload', 'Analyze', 'Results'];
 
   const handleFileChange = (f) => { setFile(f); setError(null); };
   const handleUpload = async () => {
@@ -87,25 +93,70 @@ function Dashboard() {
   const resetAll = () => { setFile(null); setDatasetId(null); setPrompt(''); setAnalysisResult(null); setUploadResponse(null); setError(null); };
 
   return (
-    <div className="dashboard-container">
-      <main className="app-main">
-        {error && <div className="error-message">{error}<button onClick={() => setError(null)} className="dismiss-btn">×</button></div>}
-        {!datasetId ? (
-          <FileUploader file={file} onFileChange={handleFileChange} onUpload={handleUpload} loading={loading} uploadResponse={uploadResponse} />
-        ) : (
+    <Box sx={{ minHeight: 'calc(100vh - 72px)', background: '#fafbfc' }}>
+      {/* Dashboard Header */}
+      <Box sx={{ background: '#fff', borderBottom: '1px solid #f1f5f9', py: 3 }}>
+        <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 3 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 2.5 }}>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 800 }}>Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</Typography>
+              <Typography variant="body2" sx={{ color: '#94a3b8' }}>Upload a dataset and let AI analyze it for you</Typography>
+            </Box>
+            {datasetId && (
+              <Button variant="outlined" size="small" onClick={resetAll} sx={{ borderColor: '#fecaca', color: '#dc2626', '&:hover': { background: '#fef2f2', borderColor: '#fca5a5' } }}>
+                ✕ New Analysis
+              </Button>
+            )}
+          </Box>
+          {/* Stepper */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {steps.map((s, i) => (
+              <React.Fragment key={s}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: .75 }}>
+                  <Box sx={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', fontWeight: 700,
+                    background: i <= step ? 'linear-gradient(135deg,#6C3AFF,#a855f7)' : '#f1f5f9', color: i <= step ? '#fff' : '#94a3b8',
+                    transition: 'all .3s ease' }}>
+                    {i < step ? '✓' : i + 1}
+                  </Box>
+                  <Typography variant="caption" sx={{ fontWeight: 600, color: i <= step ? '#0f172a' : '#94a3b8', display: { xs: 'none', sm: 'block' } }}>{s}</Typography>
+                </Box>
+                {i < steps.length - 1 && <Box sx={{ flex: 1, height: 2, background: i < step ? '#6C3AFF' : '#e2e8f0', borderRadius: 1, transition: 'all .3s ease', maxWidth: 80 }} />}
+              </React.Fragment>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Content */}
+      <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 3 }, py: 4 }}>
+        {error && (
+          <Box sx={{ background: '#fef2f2', color: '#dc2626', p: '12px 16px', borderRadius: 3, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #fecaca', fontSize: '.9rem' }}>
+            {error}
+            <Box component="button" onClick={() => setError(null)} sx={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#dc2626', ml: 2 }}>×</Box>
+          </Box>
+        )}
+
+        {step === 0 && (
+          <FileUploader file={file} onFileChange={handleFileChange} onUpload={handleUpload} loading={loading} />
+        )}
+
+        {step >= 1 && !analysisResult && (
           <>
-            <div className="upload-success">
-              <h3>✓ Dataset Uploaded</h3>
-              <p>Filename: {uploadResponse.filename}</p>
-              <p>{uploadResponse.rows} rows × {uploadResponse.cols} columns</p>
-              <button onClick={resetAll} className="reset-btn">Upload Different File</button>
-            </div>
+            {/* Dataset summary card */}
+            <Box sx={{ background: '#fff', borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,.04)', p: 2.5, mb: 3, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ width: 44, height: 44, borderRadius: 3, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>✓</Box>
+              <Box sx={{ flex: 1, minWidth: 200 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{uploadResponse?.filename}</Typography>
+                <Typography variant="caption" sx={{ color: '#94a3b8' }}>{uploadResponse?.rows?.toLocaleString()} rows × {uploadResponse?.cols} columns · {(uploadResponse?.file_size_bytes / 1024).toFixed(1)} KB</Typography>
+              </Box>
+            </Box>
             <PromptBox prompt={prompt} onPromptChange={setPrompt} onAnalyze={handleAnalyze} loading={loading} columns={uploadResponse?.columns || []} datasetId={datasetId} />
-            {analysisResult && <AnalysisResults analysisResult={analysisResult} datasetId={datasetId} />}
           </>
         )}
-      </main>
-    </div>
+
+        {analysisResult && <AnalysisResults analysisResult={analysisResult} datasetId={datasetId} />}
+      </Box>
+    </Box>
   );
 }
 
