@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
+import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import { ThemeModeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import FileUploader from './components/FileUploader';
 import PromptBox from './components/PromptBox';
@@ -23,37 +23,6 @@ import SplashScreen from './components/SplashScreen';
 import './styles.css';
 import api from './utils/api';
 
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: { main: '#6C3AFF', dark: '#5529cc', light: '#a78bfa' },
-    secondary: { main: '#a855f7' },
-    background: { default: '#ffffff', paper: '#ffffff' },
-    text: { primary: '#0f172a', secondary: '#64748b' },
-    divider: '#e2e8f0',
-    success: { main: '#16a34a' },
-    error: { main: '#dc2626' },
-    warning: { main: '#f59e0b' },
-  },
-  typography: {
-    fontFamily: '"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
-    h1: { fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 },
-    h2: { fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.15 },
-    h3: { fontWeight: 700, letterSpacing: '-0.01em' },
-    h4: { fontWeight: 700 },
-    h5: { fontWeight: 600 },
-    h6: { fontWeight: 600 },
-    button: { fontWeight: 600, textTransform: 'none' },
-  },
-  shape: { borderRadius: 14 },
-  components: {
-    MuiCssBaseline: { styleOverrides: { body: { backgroundColor: '#fff' } } },
-    MuiCard: { styleOverrides: { root: { borderRadius: 20, backgroundImage: 'none', boxShadow: '0 1px 3px rgba(0,0,0,.04),0 4px 24px rgba(0,0,0,.06)', border: 'none' } } },
-    MuiButton: { styleOverrides: { root: { borderRadius: 50, textTransform: 'none', fontWeight: 600, padding: '10px 24px' } } },
-    MuiPaper: { styleOverrides: { root: { backgroundImage: 'none' } } },
-  },
-});
-
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -62,6 +31,8 @@ function ProtectedRoute({ children }) {
 
 function Dashboard() {
   const { user } = useAuth();
+  const t = useTheme();
+  const c = t.palette.custom;
   const [file, setFile] = useState(null);
   const [datasetId, setDatasetId] = useState(null);
   const [prompt, setPrompt] = useState('');
@@ -79,7 +50,7 @@ function Dashboard() {
     setLoading(true); setError(null);
     const fd = new FormData(); fd.append('file', file);
     try { const r = await api.post('/datasets/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } }); setUploadResponse(r.data); setDatasetId(r.data.dataset_id); }
-    catch (e) { setError(e.response?.data?.detail || 'Failed to upload'); }
+    catch (e) { setError(e.safeMessage || 'Failed to upload'); }
     finally { setLoading(false); }
   };
   const handleAnalyze = async () => {
@@ -87,73 +58,64 @@ function Dashboard() {
     if (!prompt.trim()) { setError('Enter an analysis prompt'); return; }
     setLoading(true); setError(null);
     try { const r = await api.post('/analyses/', { dataset_id: datasetId, prompt }); setAnalysisResult(r.data); }
-    catch (e) { setError(e.response?.data?.detail || 'Analysis failed'); }
+    catch (e) { setError(e.safeMessage || 'Analysis failed'); }
     finally { setLoading(false); }
   };
   const resetAll = () => { setFile(null); setDatasetId(null); setPrompt(''); setAnalysisResult(null); setUploadResponse(null); setError(null); };
 
   return (
-    <Box sx={{ minHeight: 'calc(100vh - 72px)', background: '#fafbfc' }}>
-      {/* Dashboard Header */}
-      <Box sx={{ background: '#fff', borderBottom: '1px solid #f1f5f9', py: 3 }}>
+    <Box sx={{ minHeight: 'calc(100vh - 72px)', background: c.bg, transition: 'background .3s ease' }}>
+      <Box sx={{ background: c.card, borderBottom: `1px solid ${c.border}`, py: 3, transition: 'all .3s ease' }}>
         <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 3 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 2.5 }}>
             <Box>
               <Typography variant="h5" sx={{ fontWeight: 800 }}>Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</Typography>
-              <Typography variant="body2" sx={{ color: '#94a3b8' }}>Upload a dataset and let AI analyze it for you</Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Upload a dataset and let AI analyze it for you</Typography>
             </Box>
             {datasetId && (
-              <Button variant="outlined" size="small" onClick={resetAll} sx={{ borderColor: '#fecaca', color: '#dc2626', '&:hover': { background: '#fef2f2', borderColor: '#fca5a5' } }}>
+              <Button variant="outlined" size="small" onClick={resetAll} sx={{ borderColor: '#fecaca', color: '#dc2626', '&:hover': { background: 'rgba(220,38,38,.08)', borderColor: '#fca5a5' } }}>
                 ✕ New Analysis
               </Button>
             )}
           </Box>
-          {/* Stepper */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {steps.map((s, i) => (
               <React.Fragment key={s}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: .75 }}>
                   <Box sx={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', fontWeight: 700,
-                    background: i <= step ? 'linear-gradient(135deg,#6C3AFF,#a855f7)' : '#f1f5f9', color: i <= step ? '#fff' : '#94a3b8',
-                    transition: 'all .3s ease' }}>
+                    background: i <= step ? 'linear-gradient(135deg,#6C3AFF,#a855f7)' : c.bgMuted, color: i <= step ? '#fff' : 'text.secondary',
+                    transition: 'all .4s ease', boxShadow: i <= step ? '0 2px 12px rgba(108,58,255,.3)' : 'none' }}>
                     {i < step ? '✓' : i + 1}
                   </Box>
-                  <Typography variant="caption" sx={{ fontWeight: 600, color: i <= step ? '#0f172a' : '#94a3b8', display: { xs: 'none', sm: 'block' } }}>{s}</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 600, color: i <= step ? 'text.primary' : 'text.secondary', display: { xs: 'none', sm: 'block' }, transition: 'color .3s ease' }}>{s}</Typography>
                 </Box>
-                {i < steps.length - 1 && <Box sx={{ flex: 1, height: 2, background: i < step ? '#6C3AFF' : '#e2e8f0', borderRadius: 1, transition: 'all .3s ease', maxWidth: 80 }} />}
+                {i < steps.length - 1 && <Box sx={{ flex: 1, height: 2, background: i < step ? '#6C3AFF' : c.border, borderRadius: 1, transition: 'all .4s ease', maxWidth: 80 }} />}
               </React.Fragment>
             ))}
           </Box>
         </Box>
       </Box>
 
-      {/* Content */}
       <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 3 }, py: 4 }}>
         {error && (
-          <Box sx={{ background: '#fef2f2', color: '#dc2626', p: '12px 16px', borderRadius: 3, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #fecaca', fontSize: '.9rem' }}>
+          <Box className="fade-in" sx={{ background: t.palette.mode === 'dark' ? 'rgba(220,38,38,.12)' : '#fef2f2', color: '#dc2626', p: '12px 16px', borderRadius: 3, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(220,38,38,.2)', fontSize: '.9rem' }}>
             {error}
             <Box component="button" onClick={() => setError(null)} sx={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#dc2626', ml: 2 }}>×</Box>
           </Box>
         )}
-
-        {step === 0 && (
-          <FileUploader file={file} onFileChange={handleFileChange} onUpload={handleUpload} loading={loading} />
-        )}
-
+        {step === 0 && <FileUploader file={file} onFileChange={handleFileChange} onUpload={handleUpload} loading={loading} />}
         {step >= 1 && !analysisResult && (
           <>
-            {/* Dataset summary card */}
-            <Box sx={{ background: '#fff', borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,.04)', p: 2.5, mb: 3, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-              <Box sx={{ width: 44, height: 44, borderRadius: 3, background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>✓</Box>
+            <Box className="fade-in" sx={{ background: c.card, borderRadius: 4, border: `1px solid ${c.borderLight}`, boxShadow: c.shadow, p: 2.5, mb: 3, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', transition: 'all .3s ease' }}>
+              <Box sx={{ width: 44, height: 44, borderRadius: 3, background: 'rgba(22,163,106,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>✓</Box>
               <Box sx={{ flex: 1, minWidth: 200 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{uploadResponse?.filename}</Typography>
-                <Typography variant="caption" sx={{ color: '#94a3b8' }}>{uploadResponse?.rows?.toLocaleString()} rows × {uploadResponse?.cols} columns · {(uploadResponse?.file_size_bytes / 1024).toFixed(1)} KB</Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>{uploadResponse?.rows?.toLocaleString()} rows × {uploadResponse?.cols} columns · {(uploadResponse?.file_size_bytes / 1024).toFixed(1)} KB</Typography>
               </Box>
             </Box>
             <PromptBox prompt={prompt} onPromptChange={setPrompt} onAnalyze={handleAnalyze} loading={loading} columns={uploadResponse?.columns || []} datasetId={datasetId} />
           </>
         )}
-
         {analysisResult && <AnalysisResults analysisResult={analysisResult} datasetId={datasetId} />}
       </Box>
     </Box>
@@ -165,7 +127,7 @@ function AppRoutes() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <NavBar user={user} onLogout={logout} />
-      <Box sx={{ flex: 1 }}>
+      <Box sx={{ flex: 1, width: '100%' }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -197,12 +159,11 @@ export default function App() {
   }, []);
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <ThemeModeProvider>
       {splash && <SplashScreen visible={splashVisible} />}
       <AuthProvider>
         <Router><AppRoutes /></Router>
       </AuthProvider>
-    </ThemeProvider>
+    </ThemeModeProvider>
   );
 }

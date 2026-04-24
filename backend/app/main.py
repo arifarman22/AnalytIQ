@@ -15,6 +15,7 @@ from app.core.middleware import SecurityHeadersMiddleware, RequestTrackingMiddle
 from app.api.auth import router as auth_router
 from app.api.datasets import router as datasets_router
 from app.api.analyses import router as analyses_router
+from app.api.predictions import router as predictions_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("analytiq")
@@ -72,6 +73,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(datasets_router, prefix="/api/v1")
 app.include_router(analyses_router, prefix="/api/v1")
+app.include_router(predictions_router, prefix="/api/v1")
 
 
 @app.get("/")

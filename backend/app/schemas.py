@@ -106,5 +106,31 @@ class AnalysisListItem(BaseModel):
         from_attributes = True
 
 
+# Predictions
+class PredictRequest(BaseModel):
+    dataset_id: str = Field(min_length=1, max_length=100)
+    target_column: Optional[str] = Field(default=None, max_length=200)
+
+
+class PredictResponse(BaseModel):
+    id: str
+    dataset_id: str
+    target_column: str
+    task: str
+    features_used: List[str]
+    train_size: int
+    test_size: int
+    models: Dict[str, Any]
+    best_model: str
+    best_score: float
+    feature_importance: Dict[str, float]
+    sample_predictions: List[Dict[str, str]]
+    classes: Optional[List[str]] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class ErrorResponse(BaseModel):
     detail: str

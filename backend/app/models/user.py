@@ -21,3 +21,4 @@ class User(Base):
 
     datasets = relationship("Dataset", back_populates="owner", cascade="all, delete-orphan")
     analyses = relationship("Analysis", back_populates="owner", cascade="all, delete-orphan")
+    predictions = relationship("Prediction", back_populates="owner", cascade="all, delete-orphan")

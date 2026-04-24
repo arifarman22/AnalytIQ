@@ -22,6 +22,7 @@ class Dataset(Base):
 
     owner = relationship("User", back_populates="datasets")
     analyses = relationship("Analysis", back_populates="dataset", cascade="all, delete-orphan")
+    predictions = relationship("Prediction", back_populates="dataset", cascade="all, delete-orphan")
 
 
 class Analysis(Base):
@@ -38,3 +39,18 @@ class Analysis(Base):
 
     owner = relationship("User", back_populates="analyses")
     dataset = relationship("Dataset", back_populates="analyses")
+
+
+class Prediction(Base):
+    __tablename__ = "predictions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    owner_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    dataset_id = Column(UUID(as_uuid=True), ForeignKey("datasets.id"), nullable=False)
+    target_column = Column(String, nullable=False)
+    task = Column(String, nullable=False)
+    results = Column(JSON, default=dict)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    owner = relationship("User", back_populates="predictions")
+    dataset = relationship("Dataset", back_populates="predictions")
