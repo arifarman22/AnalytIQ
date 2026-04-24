@@ -1,19 +1,30 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+import re
 
 
-# Auth
 class SignupRequest(BaseModel):
     name: str = Field(min_length=2, max_length=100)
     email: EmailStr
-    password: str = Field(min_length=6, max_length=128)
-    company: Optional[str] = ""
+    password: str = Field(min_length=8, max_length=128)
+    company: Optional[str] = Field(default="", max_length=200)
+
+    @field_validator("password")
+    @classmethod
+    def password_strength(cls, v):
+        if not re.search(r'[A-Z]', v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not re.search(r'[a-z]', v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not re.search(r'[0-9]', v):
+            raise ValueError("Password must contain at least one digit")
+        return v
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(min_length=1, max_length=128)
 
 
 class TokenResponse(BaseModel):
@@ -35,11 +46,10 @@ class UserResponse(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    name: Optional[str] = None
-    company: Optional[str] = None
+    name: Optional[str] = Field(default=None, min_length=2, max_length=100)
+    company: Optional[str] = Field(default=None, max_length=200)
 
 
-# Datasets
 class UploadResponse(BaseModel):
     dataset_id: str
     filename: str
@@ -63,10 +73,14 @@ class DatasetResponse(BaseModel):
         from_attributes = True
 
 
-# Analysis
 class AnalyzeRequest(BaseModel):
-    dataset_id: str
+    dataset_id: str = Field(min_length=1, max_length=100)
     prompt: str = Field(min_length=3, max_length=2000)
+
+    @field_validator("prompt")
+    @classmethod
+    def sanitize_prompt(cls, v):
+        return v.strip()
 
 
 class AnalysisResponse(BaseModel):
@@ -92,12 +106,5 @@ class AnalysisListItem(BaseModel):
         from_attributes = True
 
 
-# Errors
 class ErrorResponse(BaseModel):
     detail: str
-
-
-class PlotResponse(BaseModel):
-    name: str
-    mime: str
-    b64: str

@@ -1,8 +1,12 @@
 import io
+import re
 import pandas as pd
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
 from app.core.database import get_db
 from app.core.auth import get_current_user
 from app.core.config import settings
@@ -12,22 +16,33 @@ from app.schemas import UploadResponse, DatasetResponse
 from typing import List
 
 router = APIRouter(prefix="/datasets", tags=["Datasets"])
+limiter = Limiter(key_func=get_remote_address)
+
+FILENAME_RE = re.compile(r'[^\w\s\-\.]', re.UNICODE)
+
+
+def sanitize_filename(name: str) -> str:
+    return FILENAME_RE.sub('_', name.strip())[:255]
 
 
 @router.post("/upload", response_model=UploadResponse, status_code=201)
+@limiter.limit(settings.RATE_LIMIT_UPLOAD)
 async def upload_dataset(
+    request: Request,
     file: UploadFile = File(...),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     import os
-    file_ext = os.path.splitext(file.filename)[1].lower()
+    file_ext = os.path.splitext(file.filename or "")[1].lower()
     if file_ext not in settings.SUPPORTED_FILE_TYPES:
         raise HTTPException(status_code=400, detail=f"Unsupported file type. Supported: {', '.join(settings.SUPPORTED_FILE_TYPES)}")
 
     contents = await file.read()
     if len(contents) > settings.MAX_FILE_SIZE:
         raise HTTPException(status_code=413, detail=f"File too large. Max {settings.MAX_FILE_SIZE // (1024 * 1024)}MB")
+    if len(contents) == 0:
+        raise HTTPException(status_code=400, detail="File is empty")
 
     try:
         if file_ext == ".csv":
@@ -36,12 +51,17 @@ async def upload_dataset(
         else:
             df = pd.read_excel(io.BytesIO(contents))
             file_content = df.to_csv(index=False)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error parsing file: {str(e)}")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not parse file. Ensure it is a valid CSV or Excel file.")
+
+    if df.empty:
+        raise HTTPException(status_code=400, detail="File contains no data")
+
+    safe_filename = sanitize_filename(file.filename or "dataset")
 
     dataset = Dataset(
         owner_id=user.id,
-        filename=file.filename,
+        filename=safe_filename,
         rows=len(df),
         cols=len(df.columns),
         columns=list(df.columns),
@@ -50,7 +70,7 @@ async def upload_dataset(
         file_type=file_ext
     )
     db.add(dataset)
-    await db.commit()
+    await db.flush()
     await db.refresh(dataset)
 
     return UploadResponse(
@@ -96,4 +116,3 @@ async def delete_dataset(dataset_id: str, user: User = Depends(get_current_user)
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
     await db.delete(dataset)
-    await db.commit()

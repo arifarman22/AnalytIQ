@@ -1,5 +1,6 @@
 fastapi>=0.104.0
 uvicorn>=0.24.0
+gunicorn>=21.2.0
 pandas
 openpyxl
 python-multipart
@@ -11,7 +12,7 @@ pydantic>=2.0.0
 pydantic-settings
 email-validator
 numpy<2
-# Database - Neon PostgreSQL
+# Database
 asyncpg
 sqlalchemy[asyncio]>=2.0.0
 # Auth

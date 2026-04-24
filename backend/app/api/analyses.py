@@ -1,8 +1,12 @@
 import io
+import logging
 import pandas as pd
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
 from app.core.database import get_db
 from app.core.auth import get_current_user
 from app.core.config import settings
@@ -13,10 +17,14 @@ from app.eda import generate_eda, generate_default_plots
 from typing import List
 
 router = APIRouter(prefix="/analyses", tags=["Analyses"])
+limiter = Limiter(key_func=get_remote_address)
+logger = logging.getLogger("analytiq")
 
 
 @router.post("/", response_model=AnalysisResponse, status_code=201)
+@limiter.limit(settings.RATE_LIMIT_ANALYSIS)
 async def run_analysis(
+    request: Request,
     req: AnalyzeRequest,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -28,8 +36,12 @@ async def run_analysis(
 
     try:
         df = pd.read_csv(io.StringIO(dataset.file_content))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error loading dataset: {str(e)}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to load dataset")
+
+    if len(df) > settings.MAX_ROWS_ANALYSIS:
+        df = df.sample(n=settings.MAX_ROWS_ANALYSIS, random_state=42)
+        logger.info(f"Dataset sampled to {settings.MAX_ROWS_ANALYSIS} rows for analysis")
 
     eda = generate_eda(df)
     plots = generate_default_plots(df, max_plots=settings.MAX_PLOTS)
@@ -40,7 +52,8 @@ async def run_analysis(
             from app.openai_client import generate_insights_from_prompt
             insights = generate_insights_from_prompt(df, req.prompt, eda)
         except Exception as e:
-            insights = {"message": "Analysis complete.", "ai_error": str(e)}
+            logger.warning(f"OpenAI insights failed: {e}")
+            insights = {"message": "Analysis complete. AI insights unavailable."}
 
     analysis = Analysis(
         owner_id=user.id,
@@ -51,7 +64,7 @@ async def run_analysis(
         insights=insights
     )
     db.add(analysis)
-    await db.commit()
+    await db.flush()
     await db.refresh(analysis)
 
     return AnalysisResponse(
