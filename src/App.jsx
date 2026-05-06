@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
@@ -31,8 +30,6 @@ function ProtectedRoute({ children }) {
 
 function Dashboard() {
   const { user } = useAuth();
-  const t = useTheme();
-  const c = t.palette.custom;
   const [file, setFile] = useState(null);
   const [datasetId, setDatasetId] = useState(null);
   const [prompt, setPrompt] = useState('');
@@ -46,16 +43,15 @@ function Dashboard() {
 
   const handleFileChange = (f) => { setFile(f); setError(null); };
   const handleUpload = async () => {
-    if (!file) { setError('Please select a file first'); return; }
+    if (!file) { setError('Select a file first'); return; }
     setLoading(true); setError(null);
     const fd = new FormData(); fd.append('file', file);
     try { const r = await api.post('/datasets/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } }); setUploadResponse(r.data); setDatasetId(r.data.dataset_id); }
-    catch (e) { setError(e.safeMessage || 'Failed to upload'); }
+    catch (e) { setError(e.safeMessage || 'Upload failed'); }
     finally { setLoading(false); }
   };
   const handleAnalyze = async () => {
-    if (!datasetId) { setError('Upload a dataset first'); return; }
-    if (!prompt.trim()) { setError('Enter an analysis prompt'); return; }
+    if (!prompt.trim()) { setError('Enter a prompt'); return; }
     setLoading(true); setError(null);
     try { const r = await api.post('/analyses/', { dataset_id: datasetId, prompt }); setAnalysisResult(r.data); }
     catch (e) { setError(e.safeMessage || 'Analysis failed'); }
@@ -64,58 +60,55 @@ function Dashboard() {
   const resetAll = () => { setFile(null); setDatasetId(null); setPrompt(''); setAnalysisResult(null); setUploadResponse(null); setError(null); };
 
   return (
-    <Box sx={{ minHeight: 'calc(100vh - 72px)', background: c.bg, transition: 'background .3s ease' }}>
-      <Box sx={{ background: c.card, borderBottom: `1px solid ${c.border}`, py: 3, transition: 'all .3s ease' }}>
-        <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 3 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 2.5 }}>
-            <Box>
-              <Typography variant="h5" sx={{ fontWeight: 800 }}>Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Upload a dataset and let AI analyze it for you</Typography>
-            </Box>
-            {datasetId && (
-              <Button variant="outlined" size="small" onClick={resetAll} sx={{ borderColor: '#fecaca', color: '#dc2626', '&:hover': { background: 'rgba(220,38,38,.08)', borderColor: '#fca5a5' } }}>
-                ✕ New Analysis
-              </Button>
-            )}
+    <Box sx={{ width: '100%', minHeight: 'calc(100vh - 64px)' }}>
+      {/* Header */}
+      <Box sx={{ width: '100%', borderBottom: '1px solid rgba(255,255,255,.04)', py: 2.5 }}>
+        <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 3 }, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography sx={{ fontWeight: 500, fontSize: '1.1rem' }}>Welcome{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</Typography>
+            <Typography sx={{ color: '#6b7280', fontSize: '.82rem', fontWeight: 300 }}>Upload a dataset and let AI analyze it</Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {/* Stepper */}
             {steps.map((s, i) => (
-              <React.Fragment key={s}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: .75 }}>
-                  <Box sx={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.75rem', fontWeight: 700,
-                    background: i <= step ? 'linear-gradient(135deg,#6C3AFF,#a855f7)' : c.bgMuted, color: i <= step ? '#fff' : 'text.secondary',
-                    transition: 'all .4s ease', boxShadow: i <= step ? '0 2px 12px rgba(108,58,255,.3)' : 'none' }}>
-                    {i < step ? '✓' : i + 1}
-                  </Box>
-                  <Typography variant="caption" sx={{ fontWeight: 600, color: i <= step ? 'text.primary' : 'text.secondary', display: { xs: 'none', sm: 'block' }, transition: 'color .3s ease' }}>{s}</Typography>
+              <Box key={s} sx={{ display: 'flex', alignItems: 'center', gap: .5 }}>
+                <Box sx={{ width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.65rem', fontWeight: 500,
+                  background: i <= step ? '#E50914' : 'rgba(255,255,255,.04)', color: i <= step ? '#fff' : '#6b7280', transition: 'all .3s ease' }}>
+                  {i < step ? '✓' : i + 1}
                 </Box>
-                {i < steps.length - 1 && <Box sx={{ flex: 1, height: 2, background: i < step ? '#6C3AFF' : c.border, borderRadius: 1, transition: 'all .4s ease', maxWidth: 80 }} />}
-              </React.Fragment>
+                <Typography sx={{ fontSize: '.75rem', color: i <= step ? '#EAEAEA' : '#6b7280', display: { xs: 'none', sm: 'block' }, fontWeight: 400 }}>{s}</Typography>
+                {i < steps.length - 1 && <Box sx={{ width: 20, height: 1, background: i < step ? '#E50914' : 'rgba(255,255,255,.06)', mx: .5 }} />}
+              </Box>
             ))}
+            {datasetId && <Button size="small" onClick={resetAll} sx={{ color: '#9ca3af', fontSize: '.78rem', '&:hover': { color: '#E50914' } }}>Reset</Button>}
           </Box>
         </Box>
       </Box>
 
-      <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 3 }, py: 4 }}>
+      {/* Content */}
+      <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 3 }, py: 4, width: '100%' }}>
         {error && (
-          <Box className="fade-in" sx={{ background: t.palette.mode === 'dark' ? 'rgba(220,38,38,.12)' : '#fef2f2', color: '#dc2626', p: '12px 16px', borderRadius: 3, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(220,38,38,.2)', fontSize: '.9rem' }}>
+          <Box className="fade-in" sx={{ background: 'rgba(229,9,20,.06)', color: '#E50914', p: '10px 16px', borderRadius: '10px', mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(229,9,20,.15)', fontSize: '.85rem', fontWeight: 400 }}>
             {error}
-            <Box component="button" onClick={() => setError(null)} sx={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#dc2626', ml: 2 }}>×</Box>
+            <Box component="button" onClick={() => setError(null)} sx={{ background: 'none', border: 'none', fontSize: '1rem', cursor: 'pointer', color: '#E50914' }}>×</Box>
           </Box>
         )}
+
         {step === 0 && <FileUploader file={file} onFileChange={handleFileChange} onUpload={handleUpload} loading={loading} />}
+
         {step >= 1 && !analysisResult && (
           <>
-            <Box className="fade-in" sx={{ background: c.card, borderRadius: 4, border: `1px solid ${c.borderLight}`, boxShadow: c.shadow, p: 2.5, mb: 3, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', transition: 'all .3s ease' }}>
-              <Box sx={{ width: 44, height: 44, borderRadius: 3, background: 'rgba(22,163,106,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>✓</Box>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{uploadResponse?.filename}</Typography>
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>{uploadResponse?.rows?.toLocaleString()} rows × {uploadResponse?.cols} columns · {(uploadResponse?.file_size_bytes / 1024).toFixed(1)} KB</Typography>
+            <Box className="fade-in" sx={{ background: 'rgba(255,255,255,.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,.04)', p: 2, mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ width: 36, height: 36, borderRadius: '8px', background: 'rgba(34,197,94,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#22c55e', fontSize: '.9rem' }}>✓</Box>
+              <Box>
+                <Typography sx={{ fontWeight: 500, fontSize: '.88rem' }}>{uploadResponse?.filename}</Typography>
+                <Typography sx={{ color: '#6b7280', fontSize: '.78rem', fontWeight: 300 }}>{uploadResponse?.rows?.toLocaleString()} rows × {uploadResponse?.cols} cols</Typography>
               </Box>
             </Box>
             <PromptBox prompt={prompt} onPromptChange={setPrompt} onAnalyze={handleAnalyze} loading={loading} columns={uploadResponse?.columns || []} datasetId={datasetId} />
           </>
         )}
+
         {analysisResult && <AnalysisResults analysisResult={analysisResult} datasetId={datasetId} />}
       </Box>
     </Box>
@@ -125,7 +118,7 @@ function Dashboard() {
 function AppRoutes() {
   const { user, logout } = useAuth();
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
       <NavBar user={user} onLogout={logout} />
       <Box sx={{ flex: 1, width: '100%' }}>
         <Routes>
@@ -151,10 +144,7 @@ export default function App() {
   const [splashVisible, setSplashVisible] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSplashVisible(false);
-      setTimeout(() => setSplash(false), 600);
-    }, 2200);
+    const timer = setTimeout(() => { setSplashVisible(false); setTimeout(() => setSplash(false), 500); }, 2000);
     return () => clearTimeout(timer);
   }, []);
 

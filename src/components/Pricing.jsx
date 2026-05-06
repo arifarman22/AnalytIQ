@@ -1,69 +1,58 @@
 import React from 'react';
 import { Typography, Box, Card, CardContent, Grid, Container, Button, Chip, Stack } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { Check, ArrowForward } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import useScrollReveal from '../hooks/useScrollReveal';
 
-const Reveal = ({ children, delay = 0 }) => { const [r, v] = useScrollReveal(.12); return <div ref={r} className={`reveal ${v ? 'visible' : ''} ${delay ? `reveal-delay-${delay}` : ''}`}>{children}</div>; };
+const Reveal = ({ children, delay = 0 }) => { const [r, v] = useScrollReveal(.08); return <div ref={r} className={`reveal ${v ? 'visible' : ''} ${delay ? `reveal-delay-${delay}` : ''}`}>{children}</div>; };
 
 const plans = [
-  { name: 'Free', price: '$0', desc: 'Basic data exploration and analysis.', features: ['5 datasets / month', 'Basic EDA', 'CSV uploads', 'Community support'], pop: false },
-  { name: 'Pro', price: '$19', desc: 'Advanced AI insights and priority support.', features: ['Unlimited datasets', 'AI-powered insights', 'All file formats', 'Priority support', 'Export reports', 'Custom visualizations'], pop: true },
-  { name: 'Enterprise', price: 'Custom', desc: 'Tailored solutions for large teams.', features: ['Everything in Pro', 'Dedicated manager', 'SSO & SAML', 'Custom integrations', 'SLA guarantee', 'On-premise option'], pop: false },
+  { name: 'Free', price: '$0', desc: 'Basic exploration.', features: ['5 datasets/month', 'Basic EDA', 'CSV uploads', 'Community support'], pop: false },
+  { name: 'Pro', price: '$19', desc: 'Full AI + ML power.', features: ['Unlimited datasets', 'AI insights', 'ML predictions', 'Priority support', 'Export reports', 'All formats'], pop: true },
+  { name: 'Enterprise', price: 'Custom', desc: 'For large teams.', features: ['Everything in Pro', 'Dedicated manager', 'SSO & SAML', 'Custom integrations', 'SLA guarantee'], pop: false },
 ];
 
-const Pricing = () => {
-  const t = useTheme();
-  const c = t.palette.custom;
-  return (
-    <Box sx={{ py: { xs: 8, md: 14 }, background: c.bgSoft, minHeight: 'calc(100vh - 70px)', transition: 'background .3s ease' }}>
-      <Container maxWidth="lg">
-        <Reveal>
-          <Box textAlign="center" sx={{ mb: 8 }}>
-            <Chip label="Pricing" size="small" sx={{ mb: 2, background: c.accentLight, color: '#6C3AFF', fontWeight: 600 }} />
-            <Typography variant="h2" sx={{ fontSize: { xs: '2rem', md: '2.8rem' }, mb: 2 }}>Simple, transparent pricing</Typography>
-            <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 460, mx: 'auto' }}>Choose the plan that fits your needs. Upgrade anytime.</Typography>
-          </Box>
-        </Reveal>
-        <Grid container spacing={3} justifyContent="center" alignItems="stretch">
-          {plans.map((p, i) => (
-            <Grid item xs={12} sm={6} md={4} key={p.name}>
-              <Reveal delay={i + 1}>
-                <Card sx={{
-                  height: '100%', display: 'flex', flexDirection: 'column', position: 'relative',
-                  border: p.pop ? '2px solid #6C3AFF' : `1px solid ${c.borderLight}`,
-                  transition: 'all .3s ease',
-                  '&:hover': { transform: 'translateY(-6px)', boxShadow: c.shadowHover },
-                }}>
-                  {p.pop && <Chip label="Most Popular" size="small" sx={{ position: 'absolute', top: 16, right: 16, background: 'linear-gradient(135deg,#6C3AFF,#a855f7)', color: '#fff', fontWeight: 700, fontSize: '.7rem' }} />}
-                  <CardContent sx={{ p: 4, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>{p.name}</Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, minHeight: 40 }}>{p.desc}</Typography>
-                    <Box sx={{ mb: 3 }}>
-                      <Typography sx={{ fontSize: '2.5rem', fontWeight: 800, display: 'inline' }}>{p.price}</Typography>
-                      {p.price !== 'Custom' && <Typography variant="body2" component="span" sx={{ color: 'text.secondary', ml: .5 }}>/month</Typography>}
-                    </Box>
-                    <Stack spacing={1.5} sx={{ flexGrow: 1, mb: 3 }}>
-                      {p.features.map(f => (
-                        <Box key={f} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Check sx={{ fontSize: 16, color: '#6C3AFF' }} />
-                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>{f}</Typography>
-                        </Box>
-                      ))}
-                    </Stack>
-                    <Button component={Link} to="/signup" fullWidth variant={p.pop ? 'contained' : 'outlined'} endIcon={<ArrowForward />}
-                      sx={{ py: 1.25, ...(p.pop ? { background: 'linear-gradient(135deg,#6C3AFF,#a855f7)', boxShadow: '0 4px 14px rgba(108,58,255,.25)' } : { borderColor: c.border, color: 'text.primary', '&:hover': { borderColor: '#a78bfa', background: c.cardHover } }) }}>
-                      {p.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Reveal>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-    </Box>
-  );
-};
+const Pricing = () => (
+  <Box sx={{ width: '100%', py: { xs: 8, md: 14 }, minHeight: 'calc(100vh - 64px)' }}>
+    <Container maxWidth="lg">
+      <Reveal>
+        <Box textAlign="center" sx={{ mb: 8 }}>
+          <Typography variant="h2" sx={{ fontSize: { xs: '2rem', md: '2.5rem' }, mb: 1.5 }}>Simple pricing</Typography>
+          <Typography sx={{ color: '#9ca3af', fontWeight: 300 }}>Choose what fits. Upgrade anytime.</Typography>
+        </Box>
+      </Reveal>
+      <Grid container spacing={2.5} justifyContent="center">
+        {plans.map((p, i) => (
+          <Grid item xs={12} sm={6} md={4} key={p.name}>
+            <Reveal delay={i + 1}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', background: 'rgba(255,255,255,.02)', border: p.pop ? '1px solid rgba(229,9,20,.3)' : '1px solid rgba(255,255,255,.04)', transition: 'all .3s ease', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 12px 40px rgba(0,0,0,.3)' } }}>
+                {p.pop && <Chip label="Popular" size="small" sx={{ position: 'absolute', top: 14, right: 14, background: '#E50914', color: '#fff', fontWeight: 500, fontSize: '.7rem' }} />}
+                <CardContent sx={{ p: 3.5, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                  <Typography sx={{ fontWeight: 500, mb: .5 }}>{p.name}</Typography>
+                  <Typography sx={{ color: '#6b7280', fontSize: '.82rem', fontWeight: 300, mb: 2.5 }}>{p.desc}</Typography>
+                  <Box sx={{ mb: 3 }}>
+                    <Typography sx={{ fontSize: '2.2rem', fontWeight: 600, display: 'inline' }}>{p.price}</Typography>
+                    {p.price !== 'Custom' && <Typography component="span" sx={{ color: '#6b7280', fontSize: '.82rem', ml: .5 }}>/mo</Typography>}
+                  </Box>
+                  <Stack spacing={1.2} sx={{ flexGrow: 1, mb: 3 }}>
+                    {p.features.map(f => (
+                      <Box key={f} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Check sx={{ fontSize: 14, color: '#E50914' }} />
+                        <Typography sx={{ color: '#9ca3af', fontSize: '.83rem', fontWeight: 300 }}>{f}</Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                  <Button component={Link} to="/signup" fullWidth endIcon={<ArrowForward sx={{ fontSize: 16 }} />}
+                    sx={p.pop ? { background: '#E50914', color: '#fff', borderRadius: '10px', '&:hover': { background: '#ff1a25' } } : { border: '1px solid rgba(255,255,255,.08)', color: '#9ca3af', borderRadius: '10px', '&:hover': { borderColor: 'rgba(255,255,255,.15)', color: '#EAEAEA' } }}>
+                    {p.price === 'Custom' ? 'Contact' : 'Get Started'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </Reveal>
+          </Grid>
+        ))}
+      </Grid>
+    </Container>
+  </Box>
+);
 export default Pricing;

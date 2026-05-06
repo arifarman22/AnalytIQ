@@ -1,43 +1,29 @@
 import React from 'react';
 import { Container, Box, Typography, Card, CardContent, Switch, List, ListItem, ListItemText, ListItemSecondaryAction, Divider } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import { useThemeMode } from '../context/ThemeContext';
 
 const Settings = () => {
-  const t = useTheme();
-  const c = t.palette.custom;
-  const { mode, toggle } = useThemeMode();
-
   const items = [
     { label: 'Email Notifications', desc: 'Receive analysis completion alerts', def: true },
-    { label: 'Dark Mode', desc: 'Use dark theme across the platform', def: mode === 'dark', onChange: toggle },
     { label: 'Auto-save Analysis', desc: 'Automatically save analysis results', def: true },
     { label: 'Share Usage Data', desc: 'Help improve AnalytIQ with anonymous data', def: false },
   ];
-
   return (
-    <Box sx={{ py: 4, background: c.bgSoft, minHeight: 'calc(100vh - 70px)', transition: 'background .3s ease' }}>
+    <Box sx={{ py: 4, width: '100%', minHeight: 'calc(100vh - 64px)' }}>
       <Container maxWidth="md">
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h3" sx={{ fontWeight: 700, mb: .5 }}>Settings</Typography>
-          <Typography variant="body1" sx={{ color: 'text.secondary' }}>Manage your preferences</Typography>
+          <Typography sx={{ fontWeight: 500, fontSize: '1.3rem', mb: .5 }}>Settings</Typography>
+          <Typography sx={{ color: '#6b7280', fontSize: '.85rem', fontWeight: 300 }}>Manage preferences</Typography>
         </Box>
-        <Card>
+        <Card sx={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)' }}>
           <CardContent sx={{ p: 0 }}>
             <List>
               {items.map((it, i) => (
                 <React.Fragment key={it.label}>
                   <ListItem sx={{ py: 2.5, px: 3 }}>
-                    <ListItemText primary={<Typography variant="body1" sx={{ fontWeight: 500 }}>{it.label}</Typography>} secondary={<Typography variant="body2" sx={{ color: 'text.secondary' }}>{it.desc}</Typography>} />
-                    <ListItemSecondaryAction>
-                      <Switch
-                        checked={it.def}
-                        onChange={it.onChange}
-                        sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#6C3AFF' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#c4b5fd' } }}
-                      />
-                    </ListItemSecondaryAction>
+                    <ListItemText primary={<Typography sx={{ fontWeight: 400, fontSize: '.9rem' }}>{it.label}</Typography>} secondary={<Typography sx={{ color: '#6b7280', fontSize: '.8rem', fontWeight: 300 }}>{it.desc}</Typography>} />
+                    <ListItemSecondaryAction><Switch defaultChecked={it.def} sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#E50914' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: 'rgba(229,9,20,.4)' } }} /></ListItemSecondaryAction>
                   </ListItem>
-                  {i < items.length - 1 && <Divider />}
+                  {i < items.length - 1 && <Divider sx={{ borderColor: 'rgba(255,255,255,.03)' }} />}
                 </React.Fragment>
               ))}
             </List>
